@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quiz Islam - Rite Malikite</title>
+    <!-- PWA / iPhone support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Quiz Islam">
+    <meta name="theme-color" content="#1a7a4c">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- ECRAN D'ACCUEIL -->
+        <div id="home-screen" class="screen active">
+            <div class="home-header">
+                <h1>&#127775; Quiz Islam</h1>
+                <p class="subtitle">Rite Malikite - Jeu Educatif en Famille</p>
+                <p class="bismillah">&#1576;&#1616;&#1587;&#1618;&#1605;&#1616; &#1575;&#1604;&#1604;&#1607;&#1616; &#1575;&#1604;&#1585;&#1617;&#1614;&#1581;&#1618;&#1605;&#1614;&#1606;&#1616; &#1575;&#1604;&#1585;&#1617;&#1614;&#1581;&#1616;&#1610;&#1605;&#1616;</p>
+            </div>
+            <div class="home-actions">
+                <button class="btn btn-primary btn-lg" onclick="showScreen('category-screen')">&#127922; Jouer</button>
+                <button class="btn btn-secondary btn-lg" onclick="showScreen('import-screen')">&#128196; Importer des questions (Excel)</button>
+                <button class="btn btn-info btn-lg" onclick="showScreen('scores-screen')">&#127942; Scores</button>
+            </div>
+            <div class="player-setup">
+                <h3>&#128106; Joueurs</h3>
+                <div id="players-list"></div>
+                <div class="add-player">
+                    <input type="text" id="player-name-input" placeholder="Nom du joueur..." maxlength="20">
+                    <button class="btn btn-small" onclick="addPlayer()">+ Ajouter</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ECRAN CATEGORIES -->
+        <div id="category-screen" class="screen">
+            <div class="screen-header">
+                <button class="btn-back" onclick="showScreen('home-screen')">&#8592; Retour</button>
+                <h2>&#128218; Choisis un th&egrave;me</h2>
+            </div>
+            <div id="categories-grid" class="categories-grid"></div>
+        </div>
+
+        <!-- ECRAN QUIZ -->
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <button class="btn-back" onclick="confirmQuit()">&#8592; Quitter</button>
+                <div class="quiz-progress">
+                    <span id="quiz-category-name"></span>
+                    <span id="quiz-counter"></span>
+                </div>
+                <div class="quiz-score-display" id="quiz-score-display"></div>
+            </div>
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <div id="question-container" class="question-container">
+                <div id="question-image" class="question-image"></div>
+                <h3 id="question-text" class="question-text"></h3>
+                <div id="answers-container" class="answers-container"></div>
+            </div>
+            <div id="explanation-box" class="explanation-box hidden">
+                <div id="explanation-icon" class="explanation-icon"></div>
+                <p id="explanation-text"></p>
+                <button class="btn btn-primary" onclick="nextQuestion()">Question suivante &#8594;</button>
+            </div>
+        </div>
+
+        <!-- ECRAN RESULTATS -->
+        <div id="results-screen" class="screen">
+            <div id="results-content"></div>
+        </div>
+
+        <!-- ECRAN IMPORT -->
+        <div id="import-screen" class="screen">
+            <div class="screen-header">
+                <button class="btn-back" onclick="showScreen('home-screen')">&#8592; Retour</button>
+                <h2>&#128196; Importer des questions</h2>
+            </div>
+            <div class="import-container">
+                <div class="import-info">
+                    <h3>Format du fichier Excel</h3>
+                    <p>Le fichier doit contenir les colonnes suivantes :</p>
+                    <table class="format-table">
+                        <tr><th>Colonne</th><th>Obligatoire</th><th>Description</th><th>Exemple</th></tr>
+                        <tr><td>categorie</td><td>&#9989;</td><td>Nom de la cat&eacute;gorie (cr&eacute;&eacute;e auto si nouvelle)</td><td>purification</td></tr>
+                        <tr><td>question</td><td>&#9989;</td><td>Texte de la question</td><td>Combien y a-t-il de piliers...</td></tr>
+                        <tr><td>reponse1</td><td>&#9989;</td><td>Premi&egrave;re r&eacute;ponse</td><td>3</td></tr>
+                        <tr><td>reponse2</td><td>&#9989;</td><td>Deuxi&egrave;me r&eacute;ponse</td><td>5</td></tr>
+                        <tr><td>reponse3</td><td></td><td>Troisi&egrave;me r&eacute;ponse (optionnel)</td><td>7</td></tr>
+                        <tr><td>reponse4</td><td></td><td>Quatri&egrave;me r&eacute;ponse (optionnel)</td><td>4</td></tr>
+                        <tr><td>bonne_reponse</td><td>&#9989;</td><td>Num&eacute;ro de la bonne r&eacute;ponse (1, 2, 3 ou 4)</td><td>2</td></tr>
+                        <tr><td>explication</td><td></td><td>Explication simple (optionnel)</td><td>Les 5 piliers sont...</td></tr>
+                        <tr><td>image</td><td></td><td>Emoji ou URL image (optionnel)</td><td>&#128300;</td></tr>
+                    </table>
+                    <p style="font-size:0.85rem;color:#666;margin-bottom:12px;">&#128161; Si une cat&eacute;gorie n'existe pas encore, elle sera cr&eacute;&eacute;e automatiquement. Minimum 2 r&eacute;ponses par question.</p>
+                    <h4>Cat&eacute;gories existantes :</h4>
+                    <div id="available-categories" class="available-categories"></div>
+                    <button class="btn btn-secondary" onclick="downloadTemplate()">&#11015; T&eacute;l&eacute;charger le mod&egrave;le Excel</button>
+                </div>
+                <div class="import-dropzone" id="dropzone">
+                    <span class="dropzone-icon">&#128196;</span>
+                    <p>Glissez votre fichier Excel ici</p>
+                    <p>ou</p>
+                    <input type="file" id="file-input" accept=".xlsx,.xls,.csv" onchange="handleFileImport(event)">
+                    <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">Choisir un fichier</button>
+                </div>
+                <div id="import-result" class="import-result hidden"></div>
+                <div id="import-stored-info" class="import-stored-info"></div>
+            </div>
+        </div>
+
+        <!-- ECRAN SCORES -->
+        <div id="scores-screen" class="screen">
+            <div class="screen-header">
+                <button class="btn-back" onclick="showScreen('home-screen')">&#8592; Retour</button>
+                <h2>&#127942; Tableau des scores</h2>
+            </div>
+            <div id="scores-content"></div>
+            <button class="btn btn-secondary" onclick="clearScores()">Effacer les scores</button>
+        </div>
+    </div>
+
+    <script src="questions.js"></script>
+    <script src="imported_questions.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
