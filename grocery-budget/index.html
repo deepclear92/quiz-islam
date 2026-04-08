@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Courses - Gestion Mensuelle</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="icon" type="image/svg+xml" href="icons/icon-192.svg">
+    <link rel="apple-touch-icon" href="icons/icon-192.svg">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Budget Courses</h1>
+        <div class="month-selector">
+            <button id="prev-month" class="btn-icon" title="Mois precedent">&larr;</button>
+            <span id="current-month-label"></span>
+            <button id="next-month" class="btn-icon" title="Mois suivant">&rarr;</button>
+        </div>
+    </header>
+
+    <nav id="main-nav">
+        <button class="nav-btn active" data-tab="dashboard">Tableau de bord</button>
+        <button class="nav-btn" data-tab="lists">Listes</button>
+        <button class="nav-btn" data-tab="products">Produits</button>
+        <button class="nav-btn" data-tab="scanner">Scanner</button>
+        <button class="nav-btn" data-tab="stats">Statistiques</button>
+    </nav>
+
+    <main>
+        <!-- DASHBOARD TAB -->
+        <section id="tab-dashboard" class="tab-content active">
+            <div class="dashboard-cards">
+                <div class="card budget-card">
+                    <h3>Budget Mensuel</h3>
+                    <div class="budget-amount" id="dash-budget">0,00 &euro;</div>
+                    <div class="budget-bar-container">
+                        <div class="budget-bar" id="dash-budget-bar"></div>
+                    </div>
+                    <div class="budget-details">
+                        <span>Depense: <strong id="dash-spent">0,00 &euro;</strong></span>
+                        <span>Restant: <strong id="dash-remaining">0,00 &euro;</strong></span>
+                    </div>
+                    <div class="budget-edit">
+                        <label>Budget mensuel :</label>
+                        <input type="number" id="monthly-budget-input" min="0" step="10" value="900">
+                        <button class="btn btn-sm" id="save-budget-btn">OK</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Passage 1</h3>
+                    <div class="card-value" id="dash-pass1">0,00 &euro;</div>
+                    <div class="card-subtitle" id="dash-pass1-items">0 articles</div>
+                    <div class="card-status" id="dash-pass1-status">Non fait</div>
+                </div>
+                <div class="card">
+                    <h3>Passage 2</h3>
+                    <div class="card-value" id="dash-pass2">0,00 &euro;</div>
+                    <div class="card-subtitle" id="dash-pass2-items">0 articles</div>
+                    <div class="card-status" id="dash-pass2-status">Non fait</div>
+                </div>
+                <div class="card">
+                    <h3>Repartition</h3>
+                    <canvas id="dash-pie-chart" width="200" height="200"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- LISTS TAB -->
+        <section id="tab-lists" class="tab-content">
+            <div class="lists-header">
+                <div class="pass-tabs">
+                    <button class="pass-tab active" data-pass="1">Passage 1 - Grand Plein</button>
+                    <button class="pass-tab" data-pass="2">Passage 2 - Reassort</button>
+                </div>
+                <div class="lists-actions">
+                    <button class="btn btn-primary" id="add-item-btn">+ Ajouter</button>
+                    <button class="btn" id="mark-done-btn">Valider le passage</button>
+                    <button class="btn" id="load-template-btn">Charger modele</button>
+                </div>
+            </div>
+            <div id="shopping-list-container">
+                <!-- Dynamic list grouped by category -->
+            </div>
+            <div class="list-total">
+                <strong>Total estimé : <span id="list-total-amount">0,00 &euro;</span></strong>
+                <span> | Réel : <span id="list-real-amount">0,00 &euro;</span></span>
+            </div>
+        </section>
+
+        <!-- PRODUCTS TAB -->
+        <section id="tab-products" class="tab-content">
+            <div class="products-header">
+                <input type="text" id="product-search" placeholder="Rechercher un produit...">
+                <select id="product-category-filter">
+                    <option value="">Toutes categories</option>
+                </select>
+                <button class="btn btn-primary" id="add-product-btn">+ Nouveau produit</button>
+            </div>
+            <div id="products-table-container">
+                <table id="products-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Categorie</th>
+                            <th>Prix unitaire</th>
+                            <th>Unite</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="products-tbody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SCANNER TAB -->
+        <section id="tab-scanner" class="tab-content">
+            <div class="scanner-container">
+                <h2>Scanner un ticket de caisse</h2>
+                <p class="scanner-info">Prenez une photo ou importez une image de votre ticket de caisse. L'application extraira automatiquement les produits et les prix.</p>
+                <div class="scanner-upload">
+                    <label class="upload-area" id="upload-area">
+                        <input type="file" id="receipt-input" accept="image/*" capture="environment">
+                        <div class="upload-icon">&#128247;</div>
+                        <span>Cliquez ou glissez une image ici</span>
+                    </label>
+                </div>
+                <div id="scanner-preview" class="hidden">
+                    <img id="receipt-preview" alt="Apercu du ticket">
+                </div>
+                <div id="scanner-progress" class="hidden">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="ocr-progress"></div>
+                    </div>
+                    <span id="ocr-status">Analyse en cours...</span>
+                </div>
+                <div id="scanner-results" class="hidden">
+                    <h3>Produits detectes</h3>
+                    <table id="scanned-items-table">
+                        <thead>
+                            <tr>
+                                <th>Produit</th>
+                                <th>Prix</th>
+                                <th>Correspondance</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scanned-items-tbody"></tbody>
+                    </table>
+                    <div class="scanner-actions">
+                        <button class="btn btn-primary" id="sync-scanned-btn">Synchroniser avec la liste</button>
+                        <button class="btn" id="clear-scan-btn">Effacer</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- STATISTICS TAB -->
+        <section id="tab-stats" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card full-width">
+                    <h3>Evolution des depenses mensuelles</h3>
+                    <canvas id="monthly-chart" height="300"></canvas>
+                </div>
+                <div class="stat-card">
+                    <h3>Repartition par categorie</h3>
+                    <canvas id="category-chart" height="300"></canvas>
+                </div>
+                <div class="stat-card">
+                    <h3>Top 10 produits les plus chers</h3>
+                    <canvas id="top-products-chart" height="300"></canvas>
+                </div>
+                <div class="stat-card full-width">
+                    <h3>Evolution du prix de produits</h3>
+                    <div class="price-track-selector">
+                        <select id="price-track-product" multiple>
+                            <!-- filled dynamically -->
+                        </select>
+                    </div>
+                    <canvas id="price-evolution-chart" height="250"></canvas>
+                </div>
+                <div class="stat-card">
+                    <h3>Comparaison Estime vs Reel</h3>
+                    <canvas id="estimate-vs-real-chart" height="300"></canvas>
+                </div>
+                <div class="stat-card">
+                    <h3>Historique</h3>
+                    <div id="history-table-container">
+                        <table id="history-table">
+                            <thead>
+                                <tr><th>Mois</th><th>Budget</th><th>Depense</th><th>Ecart</th></tr>
+                            </thead>
+                            <tbody id="history-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODALS -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal" id="modal-container">
+            <div class="modal-header">
+                <h3 id="modal-title">Modal</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer" id="modal-footer"></div>
+        </div>
+    </div>
+
+    <!-- CDN Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
+
+    <!-- App Scripts -->
+    <script src="db.js"></script>
+    <script src="data.js"></script>
+    <script src="scanner.js"></script>
+    <script src="charts.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
