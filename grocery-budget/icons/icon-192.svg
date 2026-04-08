@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="32" fill="#2c3e50"/>
+  <text x="96" y="80" text-anchor="middle" font-size="64" fill="white">&#x1F6D2;</text>
+  <text x="96" y="140" text-anchor="middle" font-size="24" font-family="sans-serif" fill="white" font-weight="bold">BUDGET</text>
+  <text x="96" y="168" text-anchor="middle" font-size="18" font-family="sans-serif" fill="#3498db">COURSES</text>
+</svg>
