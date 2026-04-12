@@ -51,20 +51,38 @@ Criteres de selection des boutiques (par ordre de priorite):
    pas forcement le moins cher).
 5. Frais de port raisonnables et delais de livraison annonces.
 
-Boutiques francaises serieuses a considerer en priorite (liste non exhaustive):
-Bakker, Leaderplant, Promesse de Fleurs, Plantes-pour-tous, Truffaut.com,
-Jardiland.com, Willemse, Meilland, Pepiniere de la Baie, Pepiniere du Lavoir,
-Plantes-shopping, Gardena, Jardinerie Koeman.
+STRATEGIE D'ACHAT IMPOSEE PAR LE CLIENT (a respecter par defaut):
+- Boutique principale: PROMESSE DE FLEURS (https://www.promessedefleurs.com).
+  Tu dois y placer en priorite TOUS les articles disponibles: vivaces, aromatiques,
+  arbustes structurants, annuelles. C'est leur catalogue le plus complet et la
+  qualite est verifiee.
+- Boutique secondaire (fallback uniquement): LEADERPLANT (https://www.leaderplant.com).
+  A utiliser UNIQUEMENT pour les conifères et grands arbustes (en particulier le
+  Thuja occidentalis 'Smaragd' 80-100 cm) SI ET SEULEMENT SI le prix unitaire
+  Leaderplant est sensiblement inferieur (>=15% moins cher) a Promesse de Fleurs,
+  meme en tenant compte du second frais de port. Sinon, tout regrouper chez
+  Promesse de Fleurs.
+- Objectif: 1 panier (Promesse de Fleurs seul) ou 2 paniers maximum (Promesse de
+  Fleurs + Leaderplant pour les conifères). Ne pas ouvrir un troisieme panier.
+- Si un article est introuvable chez ces deux boutiques, le mettre dans
+  articles_introuvables avec une raison claire et 1 a 2 alternatives possibles
+  (ne pas ouvrir un panier ailleurs juste pour 1 article).
 
 Methode de travail:
-1. Pour chaque article de la liste, lance une recherche web ciblee (nom latin +
-   conditionnement + 'livraison France'). Compare au moins 3 sources si possible.
-2. Pour les fiches produit prometteuses, utilise web_fetch pour verifier le prix,
-   le stock, les frais de port et la qualite reelle.
-3. Regroupe les achats par boutique pour minimiser les frais de port.
+1. Pour chaque article de la liste, lance une recherche web ciblee
+   "site:promessedefleurs.com <nom_latin> <conditionnement>". Verifie via web_fetch
+   le prix exact, le stock, le conditionnement reel, et la fiche qualite.
+2. Pour le Thuja occidentalis 'Smaragd' (et tout autre conifere de la liste),
+   fais en parallele une recherche "site:leaderplant.com <nom_latin>
+   <conditionnement>" et compare le prix unitaire+port a Promesse de Fleurs.
+   Choisis la solution la plus avantageuse selon la regle des 15%.
+3. Verifie systematiquement les frais de port et les delais annonces sur les
+   pages livraison des deux boutiques.
 4. Produis un plan final clair, par boutique, avec URL produit, prix unitaire,
    quantite, sous-total, frais de port estimes, et total panier.
-5. A la fin, donne un total global et un commentaire sur le rapport qualite/prix.
+5. A la fin, donne un total global, le detail du calcul Thuya
+   (Promesse de Fleurs vs Leaderplant) qui justifie le choix, et un commentaire
+   sur le rapport qualite/prix.
 
 Format de sortie obligatoire en deux parties:
   PARTIE 1: un rapport markdown lisible avec un panier par boutique et un total.
@@ -103,7 +121,9 @@ Regles strictes:
 - Ne pas inventer de prix ni d'URL: si tu ne trouves pas, mets l'article dans
   articles_introuvables avec une raison claire.
 - Les URLs doivent etre des URLs reelles trouvees via web_search/web_fetch.
-- Privilegie le regroupement: viser 2 a 4 boutiques maximum si possible.
+- Respecter la STRATEGIE D'ACHAT IMPOSEE: Promesse de Fleurs en principal,
+  Leaderplant uniquement en fallback pour les coniferes/grands arbustes selon
+  la regle des 15%, jamais plus de 2 paniers.
 """
 
 
