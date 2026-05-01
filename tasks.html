@@ -1,0 +1,1509 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#0f172a" />
+<title>TaskFlow — Gestion de tâches avancée</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          brand: {
+            50:  '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+            800: '#3730a3', 900: '#312e81'
+          }
+        },
+        boxShadow: {
+          soft: '0 8px 24px -8px rgba(15,23,42,.18)'
+        }
+      }
+    }
+  }
+</script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+<style>
+  html, body { height: 100%; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* nicer scrollbars */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: rgba(99,102,241,.35); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(99,102,241,.55); }
+
+  /* range slider */
+  input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    background: transparent; width: 100%;
+  }
+  input[type=range]::-webkit-slider-runnable-track {
+    height: 6px; border-radius: 9999px;
+    background: linear-gradient(90deg, #6366f1 var(--p,0%), #e5e7eb var(--p,0%));
+  }
+  .dark input[type=range]::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, #818cf8 var(--p,0%), #334155 var(--p,0%));
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    height: 18px; width: 18px; margin-top: -6px;
+    background: white; border: 2px solid #6366f1; border-radius: 9999px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.2); cursor: pointer;
+  }
+  .dark input[type=range]::-webkit-slider-thumb { background: #1e293b; border-color: #818cf8; }
+  input[type=range]::-moz-range-track { height: 6px; border-radius: 9999px; background: #e5e7eb; }
+  input[type=range]::-moz-range-progress { height: 6px; border-radius: 9999px; background: #6366f1; }
+  input[type=range]::-moz-range-thumb {
+    height: 18px; width: 18px; background: white; border: 2px solid #6366f1; border-radius: 9999px;
+  }
+
+  /* drag & drop helpers */
+  .sortable-ghost { opacity: .35; }
+  .sortable-chosen { transform: scale(1.01); }
+  .drag-handle { cursor: grab; }
+  .drag-handle:active { cursor: grabbing; }
+
+  /* toast animation */
+  @keyframes toastIn { from { transform: translateY(20px); opacity: 0;} to { transform: translateY(0); opacity: 1;} }
+  @keyframes toastOut { to { transform: translateY(20px); opacity: 0;} }
+  .toast { animation: toastIn .25s ease; }
+  .toast.out { animation: toastOut .25s ease forwards; }
+
+  /* modal */
+  .modal-backdrop { background: rgba(15,23,42,.55); backdrop-filter: blur(6px); }
+  @keyframes popIn { from { transform: translateY(10px) scale(.98); opacity:0;} to { transform: translateY(0) scale(1); opacity:1;} }
+  .modal-card { animation: popIn .2s ease; }
+
+  /* calendar */
+  .cal-cell { min-height: 84px; }
+  @media (max-width: 640px){ .cal-cell { min-height: 64px; } }
+
+  details > summary { list-style: none; }
+  details > summary::-webkit-details-marker { display: none; }
+
+  .truncate-2 {
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* progress ring */
+  .ring-bg { stroke: #e5e7eb; }
+  .dark .ring-bg { stroke: #334155; }
+
+  /* hide number input arrows (cleaner) */
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none; margin: 0;
+  }
+  input[type=number] { -moz-appearance: textfield; }
+</style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen">
+
+<!-- ============== TOP BAR ============== -->
+<header class="sticky top-0 z-30 backdrop-blur bg-white/80 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800">
+  <div class="max-w-7xl mx-auto px-3 sm:px-6 py-3 flex items-center gap-2 sm:gap-4">
+    <div class="flex items-center gap-2 shrink-0">
+      <div class="h-9 w-9 rounded-xl bg-gradient-to-br from-brand-500 to-fuchsia-500 grid place-items-center text-white shadow-soft">
+        <i class="fa-solid fa-list-check"></i>
+      </div>
+      <div class="leading-tight">
+        <div class="font-bold text-base sm:text-lg">TaskFlow</div>
+        <div class="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">Gestion de tâches avancée</div>
+      </div>
+    </div>
+
+    <!-- Quick add -->
+    <div class="hidden md:flex flex-1 items-center max-w-2xl">
+      <div class="relative w-full">
+        <i class="fa-solid fa-wand-magic-sparkles absolute left-3 top-1/2 -translate-y-1/2 text-brand-500"></i>
+        <input id="quickAdd" type="text" placeholder='Saisie rapide : "lire 20 pages demain 8h #lecture /10 matin, /10 soir"'
+          class="w-full pl-10 pr-24 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-brand-500 focus:bg-white dark:focus:bg-slate-900 outline-none text-sm" />
+        <button id="quickAddBtn" class="absolute right-1 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-medium">
+          <i class="fa-solid fa-plus mr-1"></i>Ajouter
+        </button>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1 ml-auto">
+      <div class="hidden sm:flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 text-sm">
+        <button data-view="list" class="view-btn px-3 py-1.5 rounded-lg font-medium"><i class="fa-solid fa-list mr-1"></i>Liste</button>
+        <button data-view="calendar" class="view-btn px-3 py-1.5 rounded-lg font-medium"><i class="fa-regular fa-calendar mr-1"></i>Calendrier</button>
+        <button data-view="dashboard" class="view-btn px-3 py-1.5 rounded-lg font-medium"><i class="fa-solid fa-chart-line mr-1"></i>Stats</button>
+      </div>
+
+      <button id="newTaskBtn" class="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium shadow-soft">
+        <i class="fa-solid fa-plus"></i><span class="hidden sm:inline ml-1">Nouvelle tâche</span>
+      </button>
+
+      <button id="notifBtn" title="Activer les notifications" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-sm">
+        <i class="fa-regular fa-bell"></i>
+      </button>
+      <button id="exportBtn" title="Exporter" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-sm">
+        <i class="fa-solid fa-download"></i>
+      </button>
+      <button id="importBtn" title="Importer" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-sm">
+        <i class="fa-solid fa-upload"></i>
+      </button>
+      <input id="importFile" type="file" accept="application/json" class="hidden" />
+      <button id="themeBtn" title="Mode sombre/clair" class="px-2.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-sm">
+        <i class="fa-regular fa-moon dark:hidden"></i>
+        <i class="fa-regular fa-sun hidden dark:inline"></i>
+      </button>
+      <button id="menuBtn" class="md:hidden px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- mobile quick add -->
+  <div class="md:hidden px-3 pb-3">
+    <div class="relative">
+      <i class="fa-solid fa-wand-magic-sparkles absolute left-3 top-1/2 -translate-y-1/2 text-brand-500"></i>
+      <input id="quickAddMobile" type="text" placeholder='ex: "courir 30 min lundi 7h #sport"'
+        class="w-full pl-10 pr-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none text-sm" />
+    </div>
+  </div>
+
+  <!-- mobile view tabs -->
+  <div class="sm:hidden flex justify-around border-t border-slate-200 dark:border-slate-800 text-xs">
+    <button data-view="list" class="view-btn flex-1 py-2"><i class="fa-solid fa-list mr-1"></i>Liste</button>
+    <button data-view="calendar" class="view-btn flex-1 py-2"><i class="fa-regular fa-calendar mr-1"></i>Calendrier</button>
+    <button data-view="dashboard" class="view-btn flex-1 py-2"><i class="fa-solid fa-chart-line mr-1"></i>Stats</button>
+  </div>
+</header>
+
+<!-- ============== LAYOUT ============== -->
+<main class="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 grid grid-cols-12 gap-4 sm:gap-6">
+
+  <!-- ===== Sidebar ===== -->
+  <aside id="sidebar" class="col-span-12 md:col-span-3 lg:col-span-3 space-y-4">
+    <!-- Stats summary -->
+    <div class="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-soft border border-slate-100 dark:border-slate-800">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-semibold flex items-center gap-2"><i class="fa-solid fa-fire text-orange-500"></i>Aujourd'hui</h3>
+        <span id="todayDate" class="text-xs text-slate-500"></span>
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-center">
+        <div class="rounded-xl bg-slate-50 dark:bg-slate-800 p-2">
+          <div id="statDoneToday" class="text-xl font-bold text-emerald-500">0</div>
+          <div class="text-[10px] uppercase text-slate-500">Faites</div>
+        </div>
+        <div class="rounded-xl bg-slate-50 dark:bg-slate-800 p-2">
+          <div id="statDueToday" class="text-xl font-bold text-brand-500">0</div>
+          <div class="text-[10px] uppercase text-slate-500">Prévues</div>
+        </div>
+        <div class="rounded-xl bg-slate-50 dark:bg-slate-800 p-2">
+          <div id="statOverdue" class="text-xl font-bold text-rose-500">0</div>
+          <div class="text-[10px] uppercase text-slate-500">En retard</div>
+        </div>
+      </div>
+      <div class="mt-3">
+        <div class="flex items-center justify-between text-xs mb-1">
+          <span class="text-slate-500">Progression du jour</span>
+          <span id="todayPct" class="font-medium">0%</span>
+        </div>
+        <div class="h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+          <div id="todayBar" class="h-full bg-gradient-to-r from-brand-500 to-fuchsia-500" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Streaks -->
+    <div class="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-soft border border-slate-100 dark:border-slate-800">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-semibold flex items-center gap-2"><i class="fa-solid fa-bolt text-amber-500"></i>Séries</h3>
+        <div class="flex items-center gap-1 text-xs">
+          <span class="text-slate-500">seuil</span>
+          <input id="streakThreshold" type="number" min="1" max="100" value="100" class="w-12 px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-center" />%
+        </div>
+      </div>
+      <ul id="streakList" class="space-y-1.5 text-sm max-h-44 overflow-auto"></ul>
+    </div>
+
+    <!-- Tag filters -->
+    <div class="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-soft border border-slate-100 dark:border-slate-800">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-semibold flex items-center gap-2"><i class="fa-solid fa-tags text-brand-500"></i>Étiquettes</h3>
+        <button id="clearTags" class="text-xs text-slate-500 hover:text-rose-500">tout effacer</button>
+      </div>
+      <div id="tagFilters" class="flex flex-wrap gap-1.5"></div>
+    </div>
+
+    <!-- Settings -->
+    <div class="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-soft border border-slate-100 dark:border-slate-800">
+      <h3 class="font-semibold flex items-center gap-2 mb-3"><i class="fa-solid fa-sliders text-brand-500"></i>Réglages</h3>
+      <label class="flex items-start gap-2 text-sm cursor-pointer">
+        <input id="autoAvg" type="checkbox" class="mt-1" />
+        <span>Avancement principal = moyenne des sous‑tâches</span>
+      </label>
+      <label class="flex items-start gap-2 text-sm cursor-pointer mt-2">
+        <input id="hideCompleted" type="checkbox" class="mt-1" />
+        <span>Masquer les tâches terminées du jour</span>
+      </label>
+    </div>
+  </aside>
+
+  <!-- ===== Main column ===== -->
+  <section class="col-span-12 md:col-span-9 lg:col-span-9 space-y-4">
+
+    <!-- Search bar -->
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="relative flex-1 min-w-[200px]">
+        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input id="searchInput" type="text" placeholder="Rechercher…"
+          class="w-full pl-10 pr-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 outline-none text-sm focus:border-brand-500" />
+      </div>
+      <select id="sortSel" class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm">
+        <option value="manual">Ordre manuel</option>
+        <option value="due">Date d'échéance</option>
+        <option value="created">Récemment créées</option>
+        <option value="progress">Avancement</option>
+        <option value="title">Titre</option>
+      </select>
+      <select id="freqFilter" class="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm">
+        <option value="">Toutes les fréquences</option>
+        <option value="once">Ponctuelle</option>
+        <option value="daily">Quotidienne</option>
+        <option value="multi">Plusieurs fois/jour</option>
+        <option value="weekly">Hebdo</option>
+      </select>
+    </div>
+
+    <!-- LIST VIEW -->
+    <div id="viewList">
+      <div id="taskList" class="space-y-3"></div>
+      <div id="emptyState" class="hidden text-center py-16 text-slate-500">
+        <div class="text-5xl mb-3"><i class="fa-regular fa-clipboard"></i></div>
+        <p class="font-medium">Aucune tâche pour ce filtre</p>
+        <p class="text-sm">Cliquez sur « Nouvelle tâche » ou utilisez la saisie rapide.</p>
+      </div>
+    </div>
+
+    <!-- CALENDAR VIEW -->
+    <div id="viewCalendar" class="hidden">
+      <div class="rounded-2xl bg-white dark:bg-slate-900 p-3 sm:p-5 shadow-soft border border-slate-100 dark:border-slate-800">
+        <div class="flex items-center justify-between mb-4">
+          <button id="calPrev" class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200"><i class="fa-solid fa-chevron-left"></i></button>
+          <h3 id="calTitle" class="font-semibold text-lg"></h3>
+          <button id="calNext" class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        <div id="calGrid" class="grid grid-cols-7 gap-1 text-sm"></div>
+      </div>
+      <div id="calDayPanel" class="mt-4 rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-soft border border-slate-100 dark:border-slate-800 hidden">
+        <h4 id="calDayTitle" class="font-semibold mb-3"></h4>
+        <div id="calDayList" class="space-y-2"></div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="viewDashboard" class="hidden space-y-4">
+      <div class="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-soft border border-slate-100 dark:border-slate-800">
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+          <h3 class="font-semibold mr-auto"><i class="fa-solid fa-chart-column text-brand-500 mr-1"></i>Tableau de bord</h3>
+          <div class="flex bg-slate-100 dark:bg-slate-800 rounded-xl p-1 text-xs">
+            <button data-period="week" class="period-btn px-3 py-1.5 rounded-lg">Semaine</button>
+            <button data-period="month" class="period-btn px-3 py-1.5 rounded-lg">Mois</button>
+            <button data-period="custom" class="period-btn px-3 py-1.5 rounded-lg">Personnalisé</button>
+          </div>
+        </div>
+        <div id="customRange" class="hidden flex flex-wrap gap-2 mb-3 text-sm">
+          <input id="rangeFrom" type="date" class="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800" />
+          <input id="rangeTo" type="date" class="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800" />
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white p-3">
+            <div class="text-xs opacity-80">Tâches terminées</div>
+            <div id="kpiDone" class="text-2xl font-bold">0</div>
+          </div>
+          <div class="rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white p-3">
+            <div class="text-xs opacity-80">Taux de complétion</div>
+            <div id="kpiRate" class="text-2xl font-bold">0%</div>
+          </div>
+          <div class="rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white p-3">
+            <div class="text-xs opacity-80">Avancement moyen</div>
+            <div id="kpiAvg" class="text-2xl font-bold">0%</div>
+          </div>
+          <div class="rounded-xl bg-gradient-to-br from-rose-500 to-rose-700 text-white p-3">
+            <div class="text-xs opacity-80">En retard</div>
+            <div id="kpiOver" class="text-2xl font-bold">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-soft border border-slate-100 dark:border-slate-800">
+          <h4 class="font-semibold mb-2 text-sm">Taux de complétion (réalisé / prévu)</h4>
+          <canvas id="chartCompletion" height="180"></canvas>
+        </div>
+        <div class="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-soft border border-slate-100 dark:border-slate-800">
+          <h4 class="font-semibold mb-2 text-sm">Avancement moyen (%)</h4>
+          <canvas id="chartProgress" height="180"></canvas>
+        </div>
+        <div class="rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-soft border border-slate-100 dark:border-slate-800 lg:col-span-2">
+          <h4 class="font-semibold mb-2 text-sm">Répartition par étiquette</h4>
+          <canvas id="chartTags" height="120"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<!-- ============== TASK MODAL ============== -->
+<div id="taskModal" class="fixed inset-0 z-40 hidden items-center justify-center p-3 modal-backdrop">
+  <div class="modal-card w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
+    <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <h3 id="modalTitle" class="font-bold text-lg">Nouvelle tâche</h3>
+      <button id="modalClose" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="taskForm" class="p-5 space-y-4">
+      <input type="hidden" name="id" />
+      <div>
+        <label class="text-xs font-medium uppercase text-slate-500">Titre *</label>
+        <input name="title" required class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 ring-brand-500" />
+      </div>
+      <div>
+        <label class="text-xs font-medium uppercase text-slate-500">Description</label>
+        <textarea name="description" rows="2" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none focus:ring-2 ring-brand-500"></textarea>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div>
+          <label class="text-xs font-medium uppercase text-slate-500">Date</label>
+          <input name="date" type="date" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none" />
+        </div>
+        <div>
+          <label class="text-xs font-medium uppercase text-slate-500">Heure</label>
+          <input name="time" type="time" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none" />
+        </div>
+        <div>
+          <label class="text-xs font-medium uppercase text-slate-500">Fréquence</label>
+          <select name="frequency" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none">
+            <option value="once">Ponctuelle</option>
+            <option value="daily">Quotidienne</option>
+            <option value="multi">Plusieurs fois / jour</option>
+            <option value="weekly">Hebdomadaire</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-medium uppercase text-slate-500">Temps estimé (min)</label>
+          <input name="estimate" type="number" min="0" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none" />
+        </div>
+      </div>
+      <div>
+        <label class="text-xs font-medium uppercase text-slate-500">Étiquettes (séparées par des virgules)</label>
+        <input name="tags" placeholder="lecture, sport, travail" class="w-full mt-1 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none" />
+      </div>
+
+      <div class="border-t border-slate-200 dark:border-slate-800 pt-4">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="font-semibold text-sm flex items-center gap-2"><i class="fa-solid fa-list-ul text-brand-500"></i>Sous‑tâches</h4>
+          <button type="button" id="addSubBtn" class="text-xs px-2 py-1 rounded-lg bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300 hover:bg-brand-100">
+            <i class="fa-solid fa-plus mr-1"></i>Ajouter
+          </button>
+        </div>
+        <div id="subList" class="space-y-2"></div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 pt-2">
+        <button type="submit" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium">
+          <i class="fa-solid fa-check mr-1"></i>Enregistrer
+        </button>
+        <button type="button" id="modalDelete" class="hidden px-4 py-2 rounded-xl bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-300 hover:bg-rose-200 text-sm font-medium">
+          <i class="fa-solid fa-trash mr-1"></i>Supprimer
+        </button>
+        <button type="button" id="modalCancel" class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-sm font-medium">Annuler</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============== TIMER MODAL ============== -->
+<div id="timerModal" class="fixed inset-0 z-40 hidden items-center justify-center p-3 modal-backdrop">
+  <div class="modal-card w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 p-5 text-center">
+    <h3 id="timerTaskTitle" class="font-semibold text-lg mb-1"></h3>
+    <p class="text-xs text-slate-500 mb-4">Minuteur</p>
+    <div id="timerDisplay" class="text-5xl font-mono font-bold tabular-nums my-6">00:00</div>
+    <div class="flex justify-center gap-2">
+      <button id="timerStart" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm"><i class="fa-solid fa-play mr-1"></i>Démarrer</button>
+      <button id="timerPause" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm hidden"><i class="fa-solid fa-pause mr-1"></i>Pause</button>
+      <button id="timerStop" class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-sm"><i class="fa-solid fa-stop mr-1"></i>Arrêter</button>
+    </div>
+    <div class="mt-4 text-sm text-slate-500">Temps total enregistré : <span id="timerTotal" class="font-semibold text-slate-800 dark:text-slate-100">0 min</span></div>
+    <button id="timerClose" class="mt-4 text-sm text-slate-500 hover:text-rose-500">Fermer</button>
+  </div>
+</div>
+
+<!-- ============== TOASTS ============== -->
+<div id="toasts" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+<!-- ============== APP SCRIPT ============== -->
+<script>
+/* ===========================================================
+   TaskFlow - vanilla JS app
+   =========================================================== */
+
+const STORAGE_KEY = 'taskflow.v1';
+const PREFS_KEY   = 'taskflow.prefs.v1';
+
+/** ---------- helpers ---------- **/
+const $ = (s, p=document) => p.querySelector(s);
+const $$ = (s, p=document) => Array.from(p.querySelectorAll(s));
+const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4);
+
+const fmtDate = (d) => {
+  if (!d) return '';
+  const dt = (d instanceof Date) ? d : new Date(d);
+  return dt.toLocaleDateString('fr-FR', { weekday:'short', day:'2-digit', month:'short' });
+};
+const isoDate = (d) => {
+  const dt = (d instanceof Date) ? d : new Date(d);
+  const y = dt.getFullYear(), m = String(dt.getMonth()+1).padStart(2,'0'), day = String(dt.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+};
+const todayIso = () => isoDate(new Date());
+const startOfDay = (d) => { const x=new Date(d); x.setHours(0,0,0,0); return x; };
+const addDays = (d, n) => { const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+const dayDiff = (a,b) => Math.round((startOfDay(a)-startOfDay(b))/86400000);
+
+/** ---------- state ---------- **/
+let state = {
+  tasks: [],
+  prefs: {
+    dark: false,
+    autoAvg: true,
+    hideCompleted: false,
+    streakThreshold: 100,
+    activeTags: [],
+    view: 'list',
+    period: 'week',
+    customFrom: null,
+    customTo: null,
+    notifAsked: false,
+  }
+};
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) state.tasks = JSON.parse(raw);
+  } catch(e){ console.warn(e); }
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    if (raw) Object.assign(state.prefs, JSON.parse(raw));
+  } catch(e){ console.warn(e); }
+
+  if (!state.tasks.length) seedSample();
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.tasks));
+}
+function savePrefs() {
+  localStorage.setItem(PREFS_KEY, JSON.stringify(state.prefs));
+}
+
+/** ---------- sample ---------- **/
+function seedSample() {
+  const today = todayIso();
+  state.tasks = [
+    {
+      id: uid(),
+      title: "Lecture 20 pages / jour",
+      description: "Maintenir l'habitude de lecture quotidienne.",
+      date: today, time: "08:00",
+      frequency: "multi",
+      estimate: 30,
+      tags: ["lecture","quotidien"],
+      subtasks: [
+        { id: uid(), title: "10 pages le matin", target: 10, unit: "pages", progress: 0, time: "08:00" },
+        { id: uid(), title: "10 pages le soir",  target: 10, unit: "pages", progress: 0, time: "21:00" },
+      ],
+      progress: 0,
+      createdAt: Date.now(),
+      timeSpent: 0,
+      history: [],   // [{date:'YYYY-MM-DD', progress:Number}]
+    },
+    {
+      id: uid(),
+      title: "Sport — 30 min",
+      description: "Cardio ou musculation",
+      date: today, time: "07:00",
+      frequency: "daily",
+      estimate: 30,
+      tags: ["sport","santé"],
+      subtasks: [],
+      progress: 0,
+      createdAt: Date.now(),
+      timeSpent: 0,
+      history: [],
+    },
+    {
+      id: uid(),
+      title: "Préparer présentation client",
+      description: "Slides + démo",
+      date: isoDate(addDays(new Date(), 2)),
+      time: "",
+      frequency: "once",
+      estimate: 90,
+      tags: ["travail"],
+      subtasks: [
+        { id: uid(), title: "Plan", target: 1, unit:"étape", progress: 0 },
+        { id: uid(), title: "Slides", target: 12, unit:"slides", progress: 0 },
+        { id: uid(), title: "Répétition", target: 1, unit:"x", progress: 0 },
+      ],
+      progress: 0,
+      createdAt: Date.now(),
+      timeSpent: 0,
+      history: [],
+    }
+  ];
+  save();
+}
+
+/** ---------- toast ---------- **/
+function toast(msg, type='info') {
+  const colors = { info:'bg-slate-800', success:'bg-emerald-600', warn:'bg-amber-600', error:'bg-rose-600' };
+  const el = document.createElement('div');
+  el.className = `toast ${colors[type]||colors.info} text-white text-sm px-4 py-2 rounded-xl shadow-lg max-w-xs`;
+  el.textContent = msg;
+  $('#toasts').appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(()=>el.remove(), 250); }, 2600);
+}
+
+/** ---------- task helpers ---------- **/
+function taskMainProgress(t) {
+  if (state.prefs.autoAvg && t.subtasks?.length) {
+    const sum = t.subtasks.reduce((a,s)=>a + (Number(s.progress)||0), 0);
+    return Math.round(sum / t.subtasks.length);
+  }
+  return Number(t.progress)||0;
+}
+function setTaskProgress(t, p) {
+  p = Math.max(0, Math.min(100, Math.round(p)));
+  if (state.prefs.autoAvg && t.subtasks?.length) {
+    // proportionally adjust each subtask
+    t.subtasks.forEach(s => s.progress = p);
+  } else {
+    t.progress = p;
+  }
+  recordHistory(t);
+}
+function recordHistory(t) {
+  const today = todayIso();
+  const p = taskMainProgress(t);
+  if (!t.history) t.history = [];
+  const ex = t.history.find(h => h.date === today);
+  if (ex) ex.progress = p; else t.history.push({ date: today, progress: p });
+  // cap history at last 365 days
+  if (t.history.length > 400) t.history = t.history.slice(-400);
+}
+
+function isTaskScheduledOn(t, dateIso) {
+  if (!t.date) return false;
+  const start = t.date;
+  if (dateIso < start) return false;
+  if (t.frequency === 'once') return dateIso === start;
+  if (t.frequency === 'daily' || t.frequency === 'multi') return true;
+  if (t.frequency === 'weekly') {
+    return dayDiff(new Date(dateIso), new Date(start)) % 7 === 0;
+  }
+  return false;
+}
+
+function streakFor(t, threshold=100) {
+  // count consecutive days (ending today or yesterday) with progress >= threshold
+  if (!t.history?.length) return 0;
+  const map = new Map(t.history.map(h => [h.date, h.progress]));
+  let count = 0;
+  let day = new Date();
+  // if today not done yet, we still include yesterday as start of streak
+  for (let i=0;i<400;i++) {
+    const k = isoDate(day);
+    const wasScheduled = isTaskScheduledOn(t, k);
+    if (!wasScheduled) { day = addDays(day, -1); continue; }
+    const p = map.get(k);
+    if (p == null) {
+      // if it's today and not yet logged, skip without breaking the streak
+      if (i === 0) { day = addDays(day, -1); continue; }
+      break;
+    }
+    if (p >= threshold) count++; else break;
+    day = addDays(day, -1);
+  }
+  return count;
+}
+
+/** ---------- rendering ---------- **/
+function activeFilteredTasks() {
+  let arr = [...state.tasks];
+  const q = ($('#searchInput')?.value || '').trim().toLowerCase();
+  if (q) {
+    arr = arr.filter(t => (t.title+' '+(t.description||'')).toLowerCase().includes(q)
+      || (t.tags||[]).some(tg => tg.toLowerCase().includes(q)));
+  }
+  const freq = $('#freqFilter')?.value;
+  if (freq) arr = arr.filter(t => t.frequency === freq);
+
+  if (state.prefs.activeTags.length) {
+    arr = arr.filter(t => state.prefs.activeTags.every(tg => (t.tags||[]).includes(tg)));
+  }
+  if (state.prefs.hideCompleted) {
+    arr = arr.filter(t => taskMainProgress(t) < 100);
+  }
+  // sort
+  const sort = $('#sortSel')?.value || 'manual';
+  if (sort === 'due') arr.sort((a,b) => (a.date||'9999').localeCompare(b.date||'9999'));
+  else if (sort === 'created') arr.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+  else if (sort === 'progress') arr.sort((a,b) => taskMainProgress(b) - taskMainProgress(a));
+  else if (sort === 'title') arr.sort((a,b) => a.title.localeCompare(b.title));
+  return arr;
+}
+
+function ringSvg(pct, size=42) {
+  const r = (size-6)/2, c = 2*Math.PI*r, off = c - (pct/100)*c;
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="shrink-0">
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke-width="4" fill="none" class="ring-bg"></circle>
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke-width="4" fill="none"
+        stroke="url(#g${size})" stroke-dasharray="${c}" stroke-dashoffset="${off}"
+        stroke-linecap="round" transform="rotate(-90 ${size/2} ${size/2})"></circle>
+      <defs>
+        <linearGradient id="g${size}" x1="0" x2="1">
+          <stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#d946ef"/>
+        </linearGradient>
+      </defs>
+      <text x="50%" y="54%" text-anchor="middle" font-size="${size*0.32}" font-weight="700" fill="currentColor">${pct}%</text>
+    </svg>`;
+}
+
+function tagPills(tags) {
+  return (tags||[]).map(t =>
+    `<span class="text-[10px] px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-200">#${escapeHtml(t)}</span>`
+  ).join('');
+}
+function escapeHtml(s) {
+  return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderList() {
+  const list = $('#taskList');
+  const arr = activeFilteredTasks();
+  list.innerHTML = '';
+  if (!arr.length) { $('#emptyState').classList.remove('hidden'); return; }
+  $('#emptyState').classList.add('hidden');
+
+  const today = todayIso();
+  const frag = document.createDocumentFragment();
+  arr.forEach(t => {
+    const pct = taskMainProgress(t);
+    const overdue = t.date && t.date < today && pct < 100 && t.frequency==='once';
+    const card = document.createElement('div');
+    card.className = `rounded-2xl bg-white dark:bg-slate-900 border ${overdue?'border-rose-300 dark:border-rose-700':'border-slate-100 dark:border-slate-800'} shadow-soft overflow-hidden`;
+    card.dataset.id = t.id;
+
+    const subDone = (t.subtasks||[]).filter(s => (s.progress||0) >= 100).length;
+    const subTot  = (t.subtasks||[]).length;
+
+    card.innerHTML = `
+      <div class="p-3 sm:p-4 flex items-start gap-3">
+        <button class="drag-handle text-slate-300 hover:text-slate-500 mt-1" title="Glisser pour réordonner"><i class="fa-solid fa-grip-vertical"></i></button>
+        <div class="shrink-0 text-slate-700 dark:text-slate-200">${ringSvg(pct, 46)}</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start gap-2">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="font-semibold ${pct>=100?'line-through text-slate-400':''}">${escapeHtml(t.title)}</h3>
+                ${freqBadge(t.frequency)}
+                ${overdue ? '<span class="text-[10px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200"><i class="fa-solid fa-triangle-exclamation mr-1"></i>en retard</span>':''}
+              </div>
+              ${t.description?`<p class="text-xs text-slate-500 mt-0.5 truncate-2">${escapeHtml(t.description)}</p>`:''}
+              <div class="mt-1 flex items-center gap-3 flex-wrap text-[11px] text-slate-500">
+                ${t.date?`<span><i class="fa-regular fa-calendar mr-1"></i>${fmtDate(t.date)}${t.time?` · ${t.time}`:''}</span>`:''}
+                ${t.estimate?`<span><i class="fa-regular fa-clock mr-1"></i>${t.estimate} min</span>`:''}
+                ${t.timeSpent?`<span><i class="fa-solid fa-stopwatch mr-1"></i>${Math.round(t.timeSpent)} min passées</span>`:''}
+                ${subTot?`<span><i class="fa-solid fa-list-ul mr-1"></i>${subDone}/${subTot} sous‑tâches</span>`:''}
+              </div>
+              <div class="mt-1.5 flex flex-wrap gap-1">${tagPills(t.tags)}</div>
+            </div>
+            <div class="flex items-center gap-1">
+              <button class="action-timer p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500" title="Minuteur"><i class="fa-regular fa-clock"></i></button>
+              <button class="action-edit p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500" title="Modifier"><i class="fa-regular fa-pen-to-square"></i></button>
+              <button class="action-delete p-2 rounded-lg hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/30 text-slate-500" title="Supprimer"><i class="fa-regular fa-trash-can"></i></button>
+            </div>
+          </div>
+
+          <div class="mt-3 flex items-center gap-2">
+            ${state.prefs.autoAvg && subTot ? '' : `
+              <input type="range" min="0" max="100" step="5" value="${pct}" class="main-progress flex-1" style="--p:${pct}%"/>
+              <div class="flex items-center gap-1">
+                <button class="prog-step px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-xs" data-d="-10">-10</button>
+                <button class="prog-step px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-xs" data-d="10">+10</button>
+                <button class="prog-set-100 px-2 py-1 rounded bg-emerald-500 text-white text-xs">100%</button>
+              </div>
+            `}
+          </div>
+
+          ${subTot ? `
+            <details class="mt-3" ${pct<100?'open':''}>
+              <summary class="cursor-pointer text-xs font-medium text-slate-500 hover:text-brand-600 select-none">
+                <i class="fa-solid fa-caret-down mr-1"></i>Sous‑tâches (${subDone}/${subTot})
+              </summary>
+              <ul class="sub-list mt-2 space-y-2">
+                ${t.subtasks.map(s => subRow(s)).join('')}
+              </ul>
+            </details>` : ''}
+        </div>
+      </div>
+    `;
+    frag.appendChild(card);
+  });
+  list.appendChild(frag);
+
+  // attach drag & drop
+  if (window.Sortable) {
+    Sortable.create(list, {
+      handle: '.drag-handle',
+      animation: 160,
+      onEnd: (e) => {
+        const ids = $$('#taskList > [data-id]').map(el => el.dataset.id);
+        state.tasks.sort((a,b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+        save();
+      }
+    });
+    $$('#taskList .sub-list').forEach(ul => {
+      Sortable.create(ul, {
+        handle: '.sub-handle',
+        animation: 160,
+        onEnd: () => {
+          const card = ul.closest('[data-id]');
+          const t = state.tasks.find(x => x.id === card.dataset.id);
+          if (!t) return;
+          const ids = $$('li[data-sid]', ul).map(el => el.dataset.sid);
+          t.subtasks.sort((a,b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+          save();
+        }
+      });
+    });
+  }
+}
+
+function freqBadge(f) {
+  const map = {
+    once:   ['Ponctuelle','bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'],
+    daily:  ['Quotidienne','bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'],
+    multi:  ['Plusieurs/jour','bg-fuchsia-50 text-fuchsia-700 dark:bg-fuchsia-900/30 dark:text-fuchsia-300'],
+    weekly: ['Hebdo','bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'],
+  };
+  const m = map[f] || map.once;
+  return `<span class="text-[10px] px-2 py-0.5 rounded-full ${m[1]}">${m[0]}</span>`;
+}
+
+function subRow(s) {
+  const p = Number(s.progress)||0;
+  return `
+    <li data-sid="${s.id}" class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2">
+      <button class="sub-handle text-slate-300 hover:text-slate-500" title="Glisser"><i class="fa-solid fa-grip-vertical text-xs"></i></button>
+      <input type="checkbox" class="sub-check accent-brand-600" ${p>=100?'checked':''} />
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between gap-2">
+          <div class="text-sm ${p>=100?'line-through text-slate-400':''} truncate">${escapeHtml(s.title)}</div>
+          <div class="text-[11px] text-slate-500 shrink-0">${s.target?`${Math.round(p*s.target/100)}/${s.target} ${escapeHtml(s.unit||'')}`:`${p}%`}${s.time?` · ${s.time}`:''}</div>
+        </div>
+        <div class="mt-1 flex items-center gap-2">
+          <input type="range" min="0" max="100" step="5" value="${p}" class="sub-progress flex-1" style="--p:${p}%"/>
+          <span class="text-[11px] w-10 text-right tabular-nums">${p}%</span>
+        </div>
+      </div>
+    </li>`;
+}
+
+/** ---------- list event delegation ---------- **/
+function bindListEvents() {
+  const list = $('#taskList');
+  list.addEventListener('input', (e) => {
+    const card = e.target.closest('[data-id]'); if (!card) return;
+    const t = state.tasks.find(x => x.id === card.dataset.id); if (!t) return;
+    if (e.target.classList.contains('main-progress')) {
+      e.target.style.setProperty('--p', e.target.value+'%');
+      setTaskProgress(t, +e.target.value);
+      save(); refreshAll();
+    }
+    if (e.target.classList.contains('sub-progress')) {
+      const li = e.target.closest('li[data-sid]');
+      const s = t.subtasks.find(x => x.id === li.dataset.sid);
+      if (s) {
+        s.progress = +e.target.value;
+        e.target.style.setProperty('--p', e.target.value+'%');
+        recordHistory(t); save(); refreshAll();
+      }
+    }
+  });
+  list.addEventListener('change', (e) => {
+    const card = e.target.closest('[data-id]'); if (!card) return;
+    const t = state.tasks.find(x => x.id === card.dataset.id); if (!t) return;
+    if (e.target.classList.contains('sub-check')) {
+      const li = e.target.closest('li[data-sid]');
+      const s = t.subtasks.find(x => x.id === li.dataset.sid);
+      if (s) {
+        s.progress = e.target.checked ? 100 : 0;
+        recordHistory(t); save(); refreshAll();
+      }
+    }
+  });
+  list.addEventListener('click', (e) => {
+    const card = e.target.closest('[data-id]'); if (!card) return;
+    const t = state.tasks.find(x => x.id === card.dataset.id); if (!t) return;
+    if (e.target.closest('.action-edit')) openTaskModal(t);
+    else if (e.target.closest('.action-delete')) confirmDelete(t);
+    else if (e.target.closest('.action-timer')) openTimer(t);
+    else if (e.target.closest('.prog-step')) {
+      const d = +e.target.closest('.prog-step').dataset.d;
+      setTaskProgress(t, taskMainProgress(t)+d);
+      save(); refreshAll();
+    }
+    else if (e.target.closest('.prog-set-100')) {
+      setTaskProgress(t, 100);
+      save(); refreshAll(); toast('Tâche terminée 🎉','success');
+    }
+  });
+}
+
+function confirmDelete(t) {
+  if (!confirm(`Supprimer la tâche « ${t.title} » ?`)) return;
+  state.tasks = state.tasks.filter(x => x.id !== t.id);
+  save(); refreshAll(); toast('Tâche supprimée','warn');
+}
+
+/** ---------- modal ---------- **/
+function openTaskModal(t) {
+  const modal = $('#taskModal'); modal.classList.remove('hidden'); modal.classList.add('flex');
+  $('#modalTitle').textContent = t ? 'Modifier la tâche' : 'Nouvelle tâche';
+  const form = $('#taskForm'); form.reset();
+  form.id.value = t?.id || '';
+  form.title.value = t?.title || '';
+  form.description.value = t?.description || '';
+  form.date.value = t?.date || todayIso();
+  form.time.value = t?.time || '';
+  form.frequency.value = t?.frequency || 'once';
+  form.estimate.value = t?.estimate || '';
+  form.tags.value = (t?.tags||[]).join(', ');
+  $('#modalDelete').classList.toggle('hidden', !t);
+  // subtasks editor
+  const sl = $('#subList'); sl.innerHTML = '';
+  (t?.subtasks||[]).forEach(s => sl.appendChild(subEditorRow(s)));
+}
+function closeModal(){ $('#taskModal').classList.add('hidden'); $('#taskModal').classList.remove('flex'); }
+
+function subEditorRow(s={}) {
+  const div = document.createElement('div');
+  div.className = "grid grid-cols-12 gap-2 items-center bg-slate-50 dark:bg-slate-800/60 rounded-xl p-2";
+  div.dataset.sid = s.id || uid();
+  div.innerHTML = `
+    <input class="col-span-12 sm:col-span-5 px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm" placeholder="Titre" value="${escapeHtml(s.title||'')}" data-k="title"/>
+    <input type="number" min="0" class="col-span-4 sm:col-span-2 px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm" placeholder="Qté" value="${s.target||''}" data-k="target"/>
+    <input class="col-span-4 sm:col-span-2 px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm" placeholder="Unité" value="${escapeHtml(s.unit||'')}" data-k="unit"/>
+    <input type="time" class="col-span-3 sm:col-span-2 px-2 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-sm" value="${s.time||''}" data-k="time"/>
+    <button type="button" class="col-span-1 text-rose-500 hover:text-rose-700 sub-remove"><i class="fa-solid fa-xmark"></i></button>
+  `;
+  div.querySelector('.sub-remove').addEventListener('click', () => div.remove());
+  return div;
+}
+
+function readSubsFromEditor() {
+  return $$('#subList > div').map(div => ({
+    id: div.dataset.sid,
+    title: div.querySelector('[data-k="title"]').value.trim(),
+    target: +div.querySelector('[data-k="target"]').value || 0,
+    unit: div.querySelector('[data-k="unit"]').value.trim(),
+    time: div.querySelector('[data-k="time"]').value || '',
+    progress: 0
+  })).filter(s => s.title);
+}
+
+function bindModal() {
+  $('#modalClose').onclick = closeModal;
+  $('#modalCancel').onclick = closeModal;
+  $('#addSubBtn').onclick = () => $('#subList').appendChild(subEditorRow());
+  $('#newTaskBtn').onclick = () => openTaskModal(null);
+  $('#taskForm').onsubmit = (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const id = f.id.value;
+    const tags = f.tags.value.split(',').map(s=>s.trim()).filter(Boolean);
+    const subs = readSubsFromEditor();
+    const data = {
+      title: f.title.value.trim(),
+      description: f.description.value.trim(),
+      date: f.date.value || null,
+      time: f.time.value || '',
+      frequency: f.frequency.value,
+      estimate: +f.estimate.value || 0,
+      tags, subtasks: subs,
+    };
+    if (id) {
+      const t = state.tasks.find(x => x.id===id);
+      // preserve progresses if subtasks unchanged ids
+      const oldSubMap = new Map((t.subtasks||[]).map(s=>[s.id,s.progress]));
+      data.subtasks = subs.map(s => ({...s, progress: oldSubMap.get(s.id) ?? 0}));
+      Object.assign(t, data);
+      toast('Tâche modifiée','success');
+    } else {
+      state.tasks.unshift({
+        id: uid(), ...data,
+        progress: 0, createdAt: Date.now(), timeSpent: 0, history: []
+      });
+      toast('Tâche ajoutée','success');
+    }
+    save(); closeModal(); refreshAll();
+  };
+  $('#modalDelete').onclick = () => {
+    const id = $('#taskForm').id.value;
+    const t = state.tasks.find(x => x.id===id);
+    if (t) { confirmDelete(t); closeModal(); }
+  };
+  // escape closes
+  document.addEventListener('keydown', (e) => { if (e.key==='Escape') closeModal(); });
+}
+
+/** ---------- quick add (NL parser) ---------- **/
+function parseQuickAdd(text) {
+  if (!text) return null;
+  let s = ' '+text+' ';
+  // tags
+  const tags = [];
+  s = s.replace(/#([\p{L}0-9_-]+)/gu, (_,t) => { tags.push(t); return ' '; });
+  // time HHhMM or HH:MM or HHh
+  let time = '';
+  const timeMatch = s.match(/\b(\d{1,2})[h:](\d{2})\b/) || s.match(/\b(\d{1,2})h\b/);
+  if (timeMatch) {
+    const h = String(timeMatch[1]).padStart(2,'0');
+    const m = String(timeMatch[2]||'00').padStart(2,'0');
+    time = `${h}:${m}`;
+    s = s.replace(timeMatch[0], ' ');
+  }
+  // date keywords
+  let date = todayIso();
+  const today = new Date();
+  const wkMap = {dimanche:0, lundi:1, mardi:2, mercredi:3, jeudi:4, vendredi:5, samedi:6};
+  if (/\baujourd'?hui\b/i.test(s)) { date = todayIso(); s = s.replace(/\baujourd'?hui\b/i,' '); }
+  else if (/\bdemain\b/i.test(s)) { date = isoDate(addDays(today,1)); s = s.replace(/\bdemain\b/i,' '); }
+  else if (/\bapr[eè]s[- ]demain\b/i.test(s)) { date = isoDate(addDays(today,2)); s = s.replace(/\bapr[eè]s[- ]demain\b/i,' '); }
+  else {
+    for (const [k,wd] of Object.entries(wkMap)) {
+      const re = new RegExp(`\\b${k}\\b`, 'i');
+      if (re.test(s)) {
+        let diff = (wd - today.getDay() + 7) % 7;
+        if (diff === 0) diff = 7;
+        date = isoDate(addDays(today, diff));
+        s = s.replace(re, ' ');
+        break;
+      }
+    }
+    // dd/mm or dd-mm
+    const dm = s.match(/\b(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?\b/);
+    if (dm) {
+      const d = +dm[1], m = +dm[2], y = dm[3] ? (+dm[3] < 100 ? 2000+ +dm[3] : +dm[3]) : today.getFullYear();
+      date = isoDate(new Date(y, m-1, d));
+      s = s.replace(dm[0], ' ');
+    }
+  }
+  // subtasks "/N label, /N label"
+  const subs = [];
+  const subRe = /\/\s*(\d+)\s*([\p{L}0-9 ]*)/gu;
+  let m;
+  while ((m = subRe.exec(s)) !== null) {
+    subs.push({ id: uid(), title: (m[2]||'').trim() || `partie ${subs.length+1}`, target: +m[1], unit: '', progress: 0 });
+  }
+  s = s.replace(subRe, ' ');
+  // estimate "30 min" or "1h30"
+  let estimate = 0;
+  const em = s.match(/\b(\d+)\s*(?:min|m)\b/i);
+  if (em) { estimate = +em[1]; s = s.replace(em[0], ' '); }
+  const hm = s.match(/\b(\d+)\s*h\s*(\d{0,2})\b/i);
+  if (hm && !time) { estimate = (+hm[1])*60 + (+(hm[2]||0)); s = s.replace(hm[0], ' '); }
+
+  // frequency hints
+  let frequency = 'once';
+  if (/\bquotidien|chaque jour|tous les jours\b/i.test(s)) { frequency = 'daily'; s = s.replace(/quotidien|chaque jour|tous les jours/ig,' '); }
+  else if (/\bhebdo|chaque semaine\b/i.test(s)) { frequency = 'weekly'; s = s.replace(/hebdo|chaque semaine/ig,' '); }
+  if (subs.length >= 2) frequency = 'multi';
+
+  const title = s.replace(/\s+/g,' ').trim();
+  if (!title) return null;
+  return { title, date, time, frequency, estimate, tags, subtasks: subs };
+}
+
+function addQuick(text) {
+  const data = parseQuickAdd(text);
+  if (!data) { toast('Saisie vide ou non reconnue','warn'); return; }
+  state.tasks.unshift({
+    id: uid(), description:'', progress:0, timeSpent:0, history:[], createdAt: Date.now(),
+    ...data
+  });
+  save(); refreshAll();
+  toast('Tâche créée ✨','success');
+}
+
+/** ---------- tag filters ---------- **/
+function renderTagFilters() {
+  const cont = $('#tagFilters');
+  const all = new Map();
+  state.tasks.forEach(t => (t.tags||[]).forEach(tg => all.set(tg, (all.get(tg)||0)+1)));
+  const tags = Array.from(all.entries()).sort((a,b) => b[1]-a[1]);
+  cont.innerHTML = tags.length ? '' : '<span class="text-xs text-slate-500">Aucune étiquette</span>';
+  tags.forEach(([tg,n]) => {
+    const active = state.prefs.activeTags.includes(tg);
+    const b = document.createElement('button');
+    b.className = `text-xs px-2 py-1 rounded-full border ${active?'bg-brand-600 text-white border-brand-600':'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}`;
+    b.innerHTML = `#${escapeHtml(tg)} <span class="opacity-60">${n}</span>`;
+    b.onclick = () => {
+      if (active) state.prefs.activeTags = state.prefs.activeTags.filter(x => x !== tg);
+      else state.prefs.activeTags.push(tg);
+      savePrefs(); refreshAll();
+    };
+    cont.appendChild(b);
+  });
+}
+
+/** ---------- streaks ---------- **/
+function renderStreaks() {
+  const ul = $('#streakList');
+  const th = state.prefs.streakThreshold || 100;
+  const items = state.tasks
+    .filter(t => t.frequency === 'daily' || t.frequency === 'multi')
+    .map(t => ({ t, n: streakFor(t, th) }))
+    .sort((a,b) => b.n - a.n);
+  if (!items.length) { ul.innerHTML = '<li class="text-xs text-slate-500">Aucune tâche récurrente</li>'; return; }
+  ul.innerHTML = items.map(({t,n}) => `
+    <li class="flex items-center justify-between gap-2">
+      <span class="truncate">${escapeHtml(t.title)}</span>
+      <span class="text-xs px-2 py-0.5 rounded-full ${n>=7?'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-200':'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}">
+        🔥 ${n} j
+      </span>
+    </li>`).join('');
+}
+
+/** ---------- top stats ---------- **/
+function renderTopStats() {
+  const today = todayIso();
+  const due = state.tasks.filter(t => isTaskScheduledOn(t, today));
+  const done = due.filter(t => taskMainProgress(t) >= 100);
+  const overdue = state.tasks.filter(t => t.frequency==='once' && t.date && t.date < today && taskMainProgress(t) < 100);
+  $('#statDoneToday').textContent = done.length;
+  $('#statDueToday').textContent  = due.length;
+  $('#statOverdue').textContent   = overdue.length;
+  const pct = due.length ? Math.round(due.reduce((a,t)=>a+taskMainProgress(t),0)/due.length) : 0;
+  $('#todayPct').textContent = pct + '%';
+  $('#todayBar').style.width = pct + '%';
+  $('#todayDate').textContent = new Date().toLocaleDateString('fr-FR',{weekday:'long', day:'numeric', month:'long'});
+}
+
+/** ---------- view switching ---------- **/
+function setView(v) {
+  state.prefs.view = v; savePrefs();
+  ['list','calendar','dashboard'].forEach(name => {
+    $('#view'+name[0].toUpperCase()+name.slice(1)).classList.toggle('hidden', name !== v);
+  });
+  $$('.view-btn').forEach(b => {
+    const a = b.dataset.view === v;
+    b.classList.toggle('bg-white', a);
+    b.classList.toggle('dark:bg-slate-900', a);
+    b.classList.toggle('shadow', a);
+    b.classList.toggle('text-brand-600', a);
+  });
+  if (v === 'calendar') renderCalendar();
+  if (v === 'dashboard') renderDashboard();
+}
+
+/** ---------- calendar ---------- **/
+let calRef = new Date(); calRef.setDate(1);
+function renderCalendar() {
+  const grid = $('#calGrid');
+  const title = $('#calTitle');
+  const y = calRef.getFullYear(), m = calRef.getMonth();
+  title.textContent = calRef.toLocaleDateString('fr-FR', { month:'long', year:'numeric' });
+
+  const first = new Date(y, m, 1);
+  const startWeekday = (first.getDay()+6)%7; // Monday=0
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const cells = [];
+  ['L','M','M','J','V','S','D'].forEach(d => cells.push(`<div class="text-center text-[11px] font-semibold text-slate-500 py-1">${d}</div>`));
+  for (let i=0;i<startWeekday;i++) cells.push(`<div class="cal-cell rounded-lg bg-slate-50/60 dark:bg-slate-800/30"></div>`);
+
+  const today = todayIso();
+  for (let d=1; d<=daysInMonth; d++) {
+    const dateIso = isoDate(new Date(y,m,d));
+    const tasks = state.tasks.filter(t => isTaskScheduledOn(t, dateIso));
+    const done = tasks.filter(t => {
+      const h = (t.history||[]).find(h => h.date===dateIso);
+      return h ? h.progress>=100 : (dateIso===today && taskMainProgress(t)>=100);
+    });
+    const pct = tasks.length ? Math.round(done.length/tasks.length*100) : 0;
+    const isToday = dateIso === today;
+    cells.push(`
+      <div class="cal-cell rounded-lg border ${isToday?'border-brand-500':'border-slate-100 dark:border-slate-800'} bg-white dark:bg-slate-900 p-1.5 cursor-pointer hover:ring-2 hover:ring-brand-300" data-date="${dateIso}">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold ${isToday?'text-brand-600':''}">${d}</span>
+          ${tasks.length?`<span class="text-[10px] text-slate-500">${done.length}/${tasks.length}</span>`:''}
+        </div>
+        ${tasks.length?`
+          <div class="mt-1 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-brand-500 to-fuchsia-500" style="width:${pct}%"></div>
+          </div>
+          <div class="mt-1 flex flex-wrap gap-0.5">
+            ${tasks.slice(0,3).map(()=>'<span class="h-1.5 w-1.5 rounded-full bg-brand-400"></span>').join('')}
+          </div>` : ''}
+      </div>`);
+  }
+  grid.innerHTML = cells.join('');
+  grid.querySelectorAll('[data-date]').forEach(el => {
+    el.addEventListener('click', () => showDayPanel(el.dataset.date));
+  });
+}
+function showDayPanel(dateIso) {
+  const panel = $('#calDayPanel'); panel.classList.remove('hidden');
+  $('#calDayTitle').textContent = new Date(dateIso).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  const list = $('#calDayList');
+  const tasks = state.tasks.filter(t => isTaskScheduledOn(t, dateIso));
+  if (!tasks.length) { list.innerHTML = '<p class="text-sm text-slate-500">Aucune tâche prévue</p>'; return; }
+  list.innerHTML = tasks.map(t => {
+    const h = (t.history||[]).find(h=>h.date===dateIso);
+    const p = h ? h.progress : (dateIso===todayIso() ? taskMainProgress(t) : 0);
+    return `<div class="flex items-center gap-3 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60">
+      <div class="text-slate-700 dark:text-slate-200">${ringSvg(p, 36)}</div>
+      <div class="flex-1 min-w-0">
+        <div class="font-medium truncate">${escapeHtml(t.title)}</div>
+        <div class="text-[11px] text-slate-500">${t.time?`<i class="fa-regular fa-clock mr-1"></i>${t.time} · `:''}${freqLabel(t.frequency)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function freqLabel(f){return {once:'Ponctuelle',daily:'Quotidienne',multi:'Plusieurs/jour',weekly:'Hebdo'}[f]||f;}
+
+/** ---------- dashboard ---------- **/
+let chartC, chartP, chartT;
+function renderDashboard() {
+  const period = state.prefs.period || 'week';
+  let from, to;
+  const today = startOfDay(new Date());
+  if (period === 'week') {
+    const dow = (today.getDay()+6)%7;
+    from = addDays(today, -dow);
+    to = addDays(from, 6);
+  } else if (period === 'month') {
+    from = new Date(today.getFullYear(), today.getMonth(), 1);
+    to = new Date(today.getFullYear(), today.getMonth()+1, 0);
+  } else {
+    from = state.prefs.customFrom ? new Date(state.prefs.customFrom) : addDays(today,-13);
+    to = state.prefs.customTo ? new Date(state.prefs.customTo) : today;
+    $('#rangeFrom').value = isoDate(from);
+    $('#rangeTo').value = isoDate(to);
+  }
+  $('#customRange').classList.toggle('hidden', period !== 'custom');
+
+  $$('.period-btn').forEach(b => {
+    const a = b.dataset.period === period;
+    b.classList.toggle('bg-white', a);
+    b.classList.toggle('dark:bg-slate-900', a);
+    b.classList.toggle('shadow', a);
+    b.classList.toggle('text-brand-600', a);
+  });
+
+  const labels = [];
+  const dueByDay = [], doneByDay = [], avgByDay = [];
+  for (let d = new Date(from); d <= to; d = addDays(d,1)) {
+    const k = isoDate(d);
+    labels.push(d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}));
+    const tasks = state.tasks.filter(t => isTaskScheduledOn(t, k));
+    dueByDay.push(tasks.length);
+    let done = 0, sumP = 0;
+    tasks.forEach(t => {
+      const h = (t.history||[]).find(h=>h.date===k);
+      const p = h ? h.progress : (k===todayIso() ? taskMainProgress(t) : 0);
+      sumP += p;
+      if (p >= 100) done++;
+    });
+    doneByDay.push(done);
+    avgByDay.push(tasks.length ? Math.round(sumP/tasks.length) : 0);
+  }
+  const totalDue = dueByDay.reduce((a,b)=>a+b,0);
+  const totalDone = doneByDay.reduce((a,b)=>a+b,0);
+  const rate = totalDue ? Math.round(totalDone*100/totalDue) : 0;
+  const avg = avgByDay.length ? Math.round(avgByDay.reduce((a,b)=>a+b,0)/avgByDay.length) : 0;
+  $('#kpiDone').textContent = totalDone;
+  $('#kpiRate').textContent = rate + '%';
+  $('#kpiAvg').textContent = avg + '%';
+  $('#kpiOver').textContent = state.tasks.filter(t => t.frequency==='once' && t.date && t.date < todayIso() && taskMainProgress(t)<100).length;
+
+  const isDark = document.documentElement.classList.contains('dark');
+  const grid = isDark ? 'rgba(148,163,184,.15)' : 'rgba(15,23,42,.08)';
+  const fg = isDark ? '#cbd5e1' : '#475569';
+  Chart.defaults.color = fg;
+
+  const cCtx = $('#chartCompletion').getContext('2d');
+  if (chartC) chartC.destroy();
+  chartC = new Chart(cCtx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label:'Prévues', data: dueByDay, backgroundColor:'rgba(99,102,241,.35)', borderRadius:6 },
+        { label:'Réalisées', data: doneByDay, backgroundColor:'#10b981', borderRadius:6 },
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      scales:{ x:{ grid:{ color:grid }}, y:{ grid:{ color:grid }, beginAtZero:true, ticks:{ stepSize:1 } } },
+      plugins:{ legend:{ position:'top' } }
+    }
+  });
+
+  const pCtx = $('#chartProgress').getContext('2d');
+  if (chartP) chartP.destroy();
+  chartP = new Chart(pCtx, {
+    type: 'line',
+    data: { labels, datasets: [{
+      label:'Avancement moyen (%)', data: avgByDay,
+      borderColor:'#d946ef', backgroundColor:'rgba(217,70,239,.15)',
+      fill:true, tension:.3, pointRadius:3
+    }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      scales:{ y:{ min:0, max:100, grid:{ color:grid }}, x:{ grid:{ color:grid } } },
+      plugins:{ legend:{ display:false } }
+    }
+  });
+
+  // tags
+  const tagMap = new Map();
+  state.tasks.forEach(t => {
+    const p = taskMainProgress(t);
+    (t.tags||[]).forEach(tg => {
+      const cur = tagMap.get(tg) || { sum:0, n:0 };
+      cur.sum += p; cur.n++;
+      tagMap.set(tg, cur);
+    });
+  });
+  const tLabels = [...tagMap.keys()];
+  const tData = tLabels.map(k => Math.round(tagMap.get(k).sum / tagMap.get(k).n));
+  const tCtx = $('#chartTags').getContext('2d');
+  if (chartT) chartT.destroy();
+  chartT = new Chart(tCtx, {
+    type:'bar',
+    data:{ labels:tLabels, datasets:[{ label:'Avancement moyen %', data:tData, backgroundColor:'#6366f1', borderRadius:6 }] },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      scales:{ x:{ min:0, max:100, grid:{ color:grid }}, y:{ grid:{ color:grid }} },
+      plugins:{ legend:{ display:false } }
+    }
+  });
+}
+
+/** ---------- timer ---------- **/
+let timer = { id:null, taskId:null, start:0, elapsed:0, running:false };
+function openTimer(t) {
+  timer.taskId = t.id; timer.elapsed = 0; timer.running = false;
+  $('#timerTaskTitle').textContent = t.title;
+  $('#timerTotal').textContent = `${Math.round(t.timeSpent||0)} min`;
+  $('#timerDisplay').textContent = '00:00';
+  $('#timerStart').classList.remove('hidden');
+  $('#timerPause').classList.add('hidden');
+  $('#timerModal').classList.remove('hidden'); $('#timerModal').classList.add('flex');
+}
+function timerTick() {
+  const sec = Math.floor((Date.now()-timer.start)/1000) + timer.elapsed;
+  const mm = String(Math.floor(sec/60)).padStart(2,'0');
+  const ss = String(sec%60).padStart(2,'0');
+  $('#timerDisplay').textContent = `${mm}:${ss}`;
+}
+function bindTimer() {
+  $('#timerStart').onclick = () => {
+    timer.start = Date.now(); timer.running = true;
+    timer.id = setInterval(timerTick, 250);
+    $('#timerStart').classList.add('hidden');
+    $('#timerPause').classList.remove('hidden');
+  };
+  $('#timerPause').onclick = () => {
+    timer.elapsed += Math.floor((Date.now()-timer.start)/1000);
+    clearInterval(timer.id); timer.running = false;
+    $('#timerStart').classList.remove('hidden');
+    $('#timerPause').classList.add('hidden');
+  };
+  $('#timerStop').onclick = () => {
+    if (timer.running) timer.elapsed += Math.floor((Date.now()-timer.start)/1000);
+    clearInterval(timer.id); timer.running = false;
+    const mins = Math.round(timer.elapsed/60);
+    if (mins > 0 && confirm(`Ajouter ${mins} min au temps passé sur cette tâche ?`)) {
+      const t = state.tasks.find(x => x.id===timer.taskId);
+      t.timeSpent = (t.timeSpent||0) + mins;
+      save(); refreshAll(); toast(`+${mins} min enregistrées`,'success');
+    }
+    timer.elapsed = 0; $('#timerDisplay').textContent = '00:00';
+    $('#timerStart').classList.remove('hidden');
+    $('#timerPause').classList.add('hidden');
+  };
+  $('#timerClose').onclick = () => {
+    if (timer.id) clearInterval(timer.id); timer.id=null; timer.running=false;
+    $('#timerModal').classList.add('hidden'); $('#timerModal').classList.remove('flex');
+  };
+}
+
+/** ---------- notifications ---------- **/
+const notified = new Set();
+function checkNotifications() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const now = new Date();
+  const today = todayIso();
+  state.tasks.forEach(t => {
+    if (!t.time) return;
+    if (!isTaskScheduledOn(t, today)) return;
+    const [h,m] = t.time.split(':').map(Number);
+    const k = `${t.id}|${today}|${t.time}|main`;
+    if (now.getHours()===h && now.getMinutes()===m && !notified.has(k)) {
+      notified.add(k);
+      try { new Notification('TaskFlow — '+t.title, { body: t.description || 'Rappel de tâche', icon: '/icon-192.png' }); } catch(_){}
+    }
+    (t.subtasks||[]).forEach(s => {
+      if (!s.time) return;
+      const [sh,sm] = s.time.split(':').map(Number);
+      const sk = `${t.id}|${today}|${s.time}|${s.id}`;
+      if (now.getHours()===sh && now.getMinutes()===sm && !notified.has(sk)) {
+        notified.add(sk);
+        try { new Notification(`TaskFlow — ${t.title}`, { body: s.title, icon: '/icon-192.png' }); } catch(_){}
+      }
+    });
+  });
+}
+
+/** ---------- export / import ---------- **/
+function exportData() {
+  const blob = new Blob([JSON.stringify({ tasks: state.tasks, prefs: state.prefs, exportedAt: new Date().toISOString() }, null, 2)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `taskflow-${todayIso()}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('Sauvegarde exportée','success');
+}
+function importData(file) {
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data.tasks)) throw new Error('format');
+      if (!confirm(`Importer ${data.tasks.length} tâche(s) et écraser les données actuelles ?`)) return;
+      state.tasks = data.tasks;
+      if (data.prefs) Object.assign(state.prefs, data.prefs);
+      save(); savePrefs(); refreshAll(); toast('Données importées','success');
+    } catch (err) { toast('Fichier invalide','error'); }
+  };
+  r.readAsText(file);
+}
+
+/** ---------- theme ---------- **/
+function applyTheme() {
+  document.documentElement.classList.toggle('dark', !!state.prefs.dark);
+}
+
+/** ---------- refresh ---------- **/
+function refreshAll() {
+  renderTopStats();
+  renderTagFilters();
+  renderStreaks();
+  renderList();
+  if (state.prefs.view === 'calendar') renderCalendar();
+  if (state.prefs.view === 'dashboard') renderDashboard();
+}
+
+/** ---------- bindings ---------- **/
+function bindGlobal() {
+  $('#themeBtn').onclick = () => { state.prefs.dark = !state.prefs.dark; savePrefs(); applyTheme(); if (state.prefs.view==='dashboard') renderDashboard(); };
+  $('#exportBtn').onclick = exportData;
+  $('#importBtn').onclick = () => $('#importFile').click();
+  $('#importFile').onchange = (e) => { const f = e.target.files[0]; if (f) importData(f); e.target.value=''; };
+  $('#notifBtn').onclick = async () => {
+    if (!('Notification' in window)) return toast('Notifications non supportées','warn');
+    const r = await Notification.requestPermission();
+    state.prefs.notifAsked = true; savePrefs();
+    toast(r==='granted'?'Notifications activées':'Notifications refusées', r==='granted'?'success':'warn');
+  };
+  $('#searchInput').addEventListener('input', renderList);
+  $('#sortSel').addEventListener('change', renderList);
+  $('#freqFilter').addEventListener('change', renderList);
+
+  $('#autoAvg').addEventListener('change', e => { state.prefs.autoAvg = e.target.checked; savePrefs(); refreshAll(); });
+  $('#hideCompleted').addEventListener('change', e => { state.prefs.hideCompleted = e.target.checked; savePrefs(); renderList(); });
+  $('#streakThreshold').addEventListener('change', e => {
+    state.prefs.streakThreshold = Math.max(1, Math.min(100, +e.target.value || 100));
+    savePrefs(); renderStreaks();
+  });
+  $('#clearTags').onclick = () => { state.prefs.activeTags = []; savePrefs(); refreshAll(); };
+
+  $$('.view-btn').forEach(b => b.onclick = () => setView(b.dataset.view));
+
+  // calendar nav
+  $('#calPrev').onclick = () => { calRef = new Date(calRef.getFullYear(), calRef.getMonth()-1, 1); renderCalendar(); };
+  $('#calNext').onclick = () => { calRef = new Date(calRef.getFullYear(), calRef.getMonth()+1, 1); renderCalendar(); };
+
+  $$('.period-btn').forEach(b => b.onclick = () => { state.prefs.period = b.dataset.period; savePrefs(); renderDashboard(); });
+  $('#rangeFrom').onchange = (e) => { state.prefs.customFrom = e.target.value; savePrefs(); renderDashboard(); };
+  $('#rangeTo').onchange = (e) => { state.prefs.customTo = e.target.value; savePrefs(); renderDashboard(); };
+
+  // quick add
+  const submitQuick = (input) => {
+    const v = input.value.trim();
+    if (!v) return;
+    addQuick(v); input.value = '';
+  };
+  $('#quickAddBtn').onclick = () => submitQuick($('#quickAdd'));
+  $('#quickAdd').addEventListener('keydown', e => { if (e.key==='Enter') submitQuick($('#quickAdd')); });
+  $('#quickAddMobile').addEventListener('keydown', e => { if (e.key==='Enter') submitQuick($('#quickAddMobile')); });
+
+  // mobile menu - just scroll to sidebar
+  $('#menuBtn').onclick = () => $('#sidebar').scrollIntoView({behavior:'smooth'});
+
+  // checkbox initial states
+  $('#autoAvg').checked = state.prefs.autoAvg;
+  $('#hideCompleted').checked = state.prefs.hideCompleted;
+  $('#streakThreshold').value = state.prefs.streakThreshold;
+
+  // close modal on backdrop click
+  $('#taskModal').addEventListener('click', e => { if (e.target === $('#taskModal')) closeModal(); });
+  $('#timerModal').addEventListener('click', e => { if (e.target === $('#timerModal')) $('#timerClose').click(); });
+}
+
+/** ---------- init ---------- **/
+function init() {
+  load();
+  applyTheme();
+  bindGlobal();
+  bindModal();
+  bindListEvents();
+  bindTimer();
+  setView(state.prefs.view || 'list');
+  refreshAll();
+  // notifications loop
+  setInterval(checkNotifications, 30 * 1000);
+  checkNotifications();
+  // periodic refresh of "today" stats around midnight
+  setInterval(() => { renderTopStats(); }, 60 * 1000);
+
+  if (!state.prefs.notifAsked && 'Notification' in window && Notification.permission === 'default') {
+    setTimeout(() => toast('💡 Activez les notifications via l\'icône 🔔', 'info'), 1500);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
