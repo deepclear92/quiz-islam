@@ -22,29 +22,16 @@
             padding: 24px 20px 20px;
             text-align: center;
             box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+            position: relative;
         }
 
-        .header .logo {
-            font-size: 2.2rem;
-            margin-bottom: 6px;
-        }
-
-        .header h1 {
-            font-size: 1.3rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        .header .subtitle {
-            font-size: 0.85rem;
-            opacity: 0.85;
-            margin-top: 4px;
-        }
+        .header .logo { font-size: 2.2rem; margin-bottom: 6px; }
+        .header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.5px; }
+        .header .subtitle { font-size: 0.85rem; opacity: 0.85; margin-top: 4px; }
 
         .back-btn {
             position: absolute;
-            top: 18px;
-            left: 16px;
+            top: 18px; left: 16px;
             background: rgba(255,255,255,0.2);
             color: white;
             border: none;
@@ -58,11 +45,10 @@
             gap: 6px;
             transition: background 0.2s;
         }
-
         .back-btn:hover { background: rgba(255,255,255,0.3); }
 
         .container {
-            max-width: 900px;
+            max-width: 960px;
             margin: 0 auto;
             padding: 24px 16px;
         }
@@ -70,21 +56,25 @@
         .intro {
             text-align: center;
             margin-bottom: 28px;
-            color: #555;
-            font-size: 0.95rem;
-            line-height: 1.5;
+            color: #666;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            background: white;
+            padding: 14px 20px;
+            border-radius: 12px;
+            border: 1px solid #e8e0d0;
         }
 
         .docs-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
             gap: 20px;
         }
 
         .doc-card {
             background: white;
             border-radius: 16px;
-            padding: 24px 20px 20px;
+            padding: 22px 18px 18px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.08);
             display: flex;
             flex-direction: column;
@@ -93,16 +83,12 @@
             border: 1px solid #e8e0d0;
             transition: transform 0.15s, box-shadow 0.15s;
         }
-
         .doc-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 20px rgba(0,0,0,0.12);
         }
 
-        .doc-icon {
-            font-size: 2.2rem;
-            margin-bottom: 10px;
-        }
+        .doc-icon { font-size: 2rem; margin-bottom: 8px; }
 
         .doc-title {
             font-size: 1rem;
@@ -113,22 +99,38 @@
         }
 
         .doc-subtitle {
-            font-size: 0.8rem;
-            color: #888;
-            margin-bottom: 16px;
+            font-size: 0.78rem;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .pages-badge {
+            display: inline-block;
+            background: #f0f7f4;
+            color: #1a7a4c;
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            margin-bottom: 14px;
+            border: 1px solid #c3e0d4;
         }
 
         .qr-container {
-            background: #fff;
-            border: 2px solid #e8e0d0;
+            background: white;
+            border: 2px solid #e0ede7;
             border-radius: 12px;
             padding: 10px;
-            margin-bottom: 16px;
+            margin-bottom: 10px;
         }
+        .qr-container img { display: block; border-radius: 6px; }
 
-        .qr-container canvas, .qr-container img {
-            display: block;
-            border-radius: 6px;
+        .doc-url {
+            font-size: 0.65rem;
+            color: #bbb;
+            margin-bottom: 14px;
+            word-break: break-all;
+            max-width: 220px;
         }
 
         .doc-actions {
@@ -143,46 +145,33 @@
             color: white;
             border: none;
             border-radius: 8px;
-            padding: 9px 18px;
-            font-size: 0.85rem;
+            padding: 9px 16px;
+            font-size: 0.83rem;
             font-weight: 600;
             cursor: pointer;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             transition: background 0.2s;
         }
-
         .btn-download:hover { background: #0d5c38; }
 
-        .btn-print {
+        .btn-view {
             background: #f5f0e8;
             color: #555;
             border: 1px solid #ddd;
             border-radius: 8px;
             padding: 9px 14px;
-            font-size: 0.85rem;
+            font-size: 0.83rem;
             cursor: pointer;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 5px;
             transition: background 0.2s;
         }
-
-        .btn-print:hover { background: #ede7d7; }
-
-        .pages-badge {
-            display: inline-block;
-            background: #f0f7f4;
-            color: #1a7a4c;
-            border-radius: 20px;
-            padding: 2px 10px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-bottom: 14px;
-            border: 1px solid #c3e0d4;
-        }
+        .btn-view:hover { background: #ede7d7; }
 
         .footer {
             text-align: center;
@@ -191,20 +180,21 @@
             font-size: 0.8rem;
         }
 
-        @media print {
-            .back-btn, .btn-print, .intro { display: none; }
-            .docs-grid { grid-template-columns: repeat(2, 1fr); }
-            .doc-card { break-inside: avoid; }
-        }
-
         @media (max-width: 480px) {
             .docs-grid { grid-template-columns: 1fr; }
+        }
+
+        @media print {
+            .back-btn, .btn-download, .btn-view, .intro { display: none; }
+            body { background: white; }
+            .doc-card { break-inside: avoid; border: 1px solid #ddd; }
+            .docs-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
         }
     </style>
 </head>
 <body>
 
-<div class="header" style="position:relative;">
+<div class="header">
     <a href="index.html" class="back-btn">&#8592; Retour</a>
     <div class="logo">&#128218;</div>
     <h1>Documents à télécharger</h1>
@@ -213,115 +203,87 @@
 
 <div class="container">
     <p class="intro">
-        Scannez le QR code avec votre téléphone pour télécharger chaque document directement,
-        ou cliquez sur le bouton de téléchargement.
+        &#128247; Scannez le QR code avec votre téléphone pour télécharger chaque document,
+        ou cliquez sur <strong>Télécharger</strong>.
     </p>
 
-    <div class="docs-grid" id="docs-grid"></div>
+    <div class="docs-grid">
+        <div class="doc-card">
+            <div class="doc-icon">📜</div>
+            <div class="doc-title">Testament de Sidi Hamza</div>
+            <div class="doc-subtitle">Sidi Hamza Kadiri Boutchich — 3 octobre 1990</div>
+            <span class="pages-badge">3 pages &bull; Français</span>
+            <div class="qr-container">
+                <img src="data:image/png;base64,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" alt="QR Code - Testament de Sidi Hamza" width="200" height="200">
+            </div>
+            <div class="doc-url">https://deepclear92.github.io/quiz-islam/documents/testament-sidi-hamza.pdf</div>
+            <div class="doc-actions">
+                <a class="btn-download" href="https://deepclear92.github.io/quiz-islam/documents/testament-sidi-hamza.pdf" download>&#11015; Télécharger</a>
+                <a class="btn-view" href="https://deepclear92.github.io/quiz-islam/documents/testament-sidi-hamza.pdf" target="_blank">&#128065; Ouvrir</a>
+            </div>
+        </div>
+        <div class="doc-card">
+            <div class="doc-icon">✉️</div>
+            <div class="doc-title">Lettre à Sidi Munir</div>
+            <div class="doc-subtitle">رسالة إلى سيدي منير — M. Toufiq</div>
+            <span class="pages-badge">11 pages &bull; Arabe</span>
+            <div class="qr-container">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAVgAAAFYCAIAAACZDnMXAAAHHElEQVR4nO3dza0zNxKG0fczJgvH5Ii8dkQTk+PQLLwmDAJVquKdc9ZCq/WDBwTIJn99Pp8A/99+m74BYJ4QAEIACAEQIQAiBECEAIgQABECIEIARAiACAEQIQAiBECEAIgQABECIEIARAiACAEQIQAiBECEAEjyn6oL/f7nH1WXavX3X/8ded/b7+f2PruvX/W+J1Wf93SdqtdvU/U7GhEAQgAIARAhACIEQIQAiBAAKVxHcPLKvP3U9avmvW9NzatX3f/U/P9P/T8bEQBCAAgBECEAIgRAhACIEAD5wjqCk23z0tueq696fdV8e/e8/ev7BWz7P98yIgCEABACIEIARAiACAEQIQAyuI7gFVPP53fPz1dd5/b+u9cLTM3Dv86IABACQAiACAEQIQAiBECEAIh1BP+qe7+Ak6nn8Ks+77Z9ELrPiXidEQEgBIAQABECIEIARAiACAGQwXUEr8zf3s5jT+1fcFI1f151nW3rC6q88n8+MSIAhAAQAiBCAEQIgAgBECEA8oV1BNvOsd+me51C1etvTa07eOWciG2MCAAhAIQAiBAAEQIgQgBECIAUriN4/Xnsn2rqnIWp/8PUvg+vMyIAhAAQAiBCAEQIgAgBECEAUriOYOr58Fun+9l2HkGV7vMLqq5f9fqT7vusMvU/MSIAhAAQAiBCAEQIgAgBECEA8oX9CLrnY7vnyW/f9/bzdt9/1f10f65tz/+/fh7ELSMCQAgAIQAiBECEAIgQABECIMmvz+dTcqGp+fNbU/Pt3fPMJ1PrLG5NrXfo1v0/r/pdjAgAIQCEAIgQABECIEIARAiAFO5HcFI1z/nKuQCvrBe49co6i1vb1iNM3Y8RASAEgBAAEQIgQgBECIAIAZAvrCM4+anPn1edO1D1ebvPcagydW5C9/9w2//zxIgAEAJACIAIARAhACIEQIQAyOC5Brem5rG71y9071+w7f6777N7H4Spcyu6//9GBIAQAEIARAiACAEQIQAiBEAK1xFU+anzxq/sk//K60+27Qdx0r1u4pYRASAEgBAAEQIgQgBECIAIAZDCcw227Uu/7TnzW93rFLY9P9/9ebetF5i6zokRASAEgBAAEQIgQgBECIAIAZAfsB/BrVeenz/Zdg7CK8/5n0ztfzH1fzsxIgCEABACIEIARAiACAEQIQBSuI6gez729jpVts0zV/mp39vt/UztN7Htf25EAAgBIARAhACIEAARAiBCAKTwXIMqVfPq3fP2256rvzX1PPzUeQfb1mvc3o/9CIB2QgAIASAEQIQAiBAAEQIgg+cavL6f/8m259u3rUfY9r5+338YEQBCAAgBECEAIgRAhACIEAAp3I/glfPtu019D9vOBXj9fW91/+7ONQDaCQEgBIAQABECIEIARAiAfGE/gu553an56ldM7fNvfcHs+94yIgCEABACIEIARAiACAEQIQBSuB9Bldt516lz76fWR3SbWl9Q5fY+X9/PwrkGQBkhAIQAEAIgQgBECIAIAZCH9iPonl/dNp88ZWofh237BVR55XswIgCEABACIEIARAiACAEQIQBSuB/B1HPgU/sRnEztqz81/1z1/W/7Hbtt+1xGBIAQAEIARAiACAEQIQAiBEAK9yOoOq/+pGp+fup9T6ru/6e+b5Vtv/s2RgSAEABCAEQIgAgBECEAIgRAHlpH0K17ncLr5yy8ss/C1LqSKlP3Y0QACAEgBECEAIgQABECIEIApPBcgypTz3V3n7PQrXvevurcitv77P5cVdepus+pdTdGBIAQAEIARAiACAEQIQAiBEAWriOYeg7/dv52234BJ9vmvV9fr3HS/bm6P68RASAEgBAAEQIgQgBECIAIAZDCcw1eN7U//62p/fxvTZ0TMXUuwLbzEW4ZEQBCAAgBECEAIgRAhACIEAApXEfwyvP5t/O33fPDU/PkU+sOtp1b8cp6h5Oq79OIABACQAiACAEQIQAiBECEAMgXzjXYNm9c9fru9QK3bq8zNb9d9T1s+z5Puj9vFSMCQAgAIQAiBECEAIgQABECIF9YR3Cy7Xns7utv28d+27qJ7n0WTrad7zDFiAAQAkAIgAgBECEAIgRAhADI4DqCV0w9T77t+rde2f9/av3C1PVPjAgAIQCEAIgQABECIEIARAiAWEfwr6b2n+/et79b9/1P7SNw+/pt+yOcGBEAQgAIARAhACIEQIQAiBAAGVxHsG0+vPt59ZOpdQfb9tU/mVp3UPV9vrJuwogAEAJACIAIARAhACIEQIQAyBfWEbwyX919n93rEabmt29N7SMwtb5j6vq3jAgAIQCEAIgQABECIEIARAiAJL8+n8/0PQDDjAgAIQCEAIgQABECIEIARAiACAEQIQAiBECEAIgQABECIEIARAiACAEQIQAiBECEAIgQABECIEIARAiAJP8D/qu49aZhfw4AAAAASUVORK5CYII=" alt="QR Code - Lettre à Sidi Munir" width="200" height="200">
+            </div>
+            <div class="doc-url">https://deepclear92.github.io/quiz-islam/documents/lettre-sidi-munir.pdf</div>
+            <div class="doc-actions">
+                <a class="btn-download" href="https://deepclear92.github.io/quiz-islam/documents/lettre-sidi-munir.pdf" download>&#11015; Télécharger</a>
+                <a class="btn-view" href="https://deepclear92.github.io/quiz-islam/documents/lettre-sidi-munir.pdf" target="_blank">&#128065; Ouvrir</a>
+            </div>
+        </div>
+        <div class="doc-card">
+            <div class="doc-icon">📄</div>
+            <div class="doc-title">رسالة الوزير ٢</div>
+            <div class="doc-subtitle">Risala Al-Wazir 2</div>
+            <span class="pages-badge">2 pages &bull; Arabe</span>
+            <div class="qr-container">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAVgAAAFYCAIAAACZDnMXAAAHGUlEQVR4nO3dwa0bNxSG0f8Z7iI1pSKvXVFqSh2ThbchDML36pLSOUsvRiO98QcC5JBfz/ME+Gzfpm8AmCcEgBAAQgBECIAIARAhACIEQIQAiBAAEQIgQgBECIAIARAhACIEQIQAiBAAEQIgQgBECIAIARAhAJJ8r7rQXz/+rrpUq39//vO//959/6vP3bW6z+7vddr9V33fqeehStXfxYgAEAJACIAIARAhACIEQIQASOE6gpWqec5dVfPJVU6bP1/pvp+q+z/t9+nWva7BiAAQAkAIgAgBECEAIgRAhADIC9YRrNwyr/uu8+e33M/u51Zdf9ctz/OKEQEgBIAQABECIEIARAiACAGQwXUEp+l+3/td58+7zzvY1b1+4V0ZEQBCAAgBECEAIgRAhACIEACxjuC3btnHvmo9wtT3Pe18h09jRAAIASAEQIQAiBAAEQIgQgBkcB3BLe+B785jV32v3Xny7v0Ouq9T9blT6wtueZ5XjAgAIQCEAIgQABECIEIARAiAvGAdwe3vh3e/J3/ae/i3nAswdT+3P88rRgSAEABCAEQIgAgBECEAIgRAkq/neabv4Qjd7+GvnDbv3f19pz739v0CuhkRAEIACAEQIQAiBECEAIgQACncj6D7/fCp9/Nv966/T/dz1W3qvIkVIwJACAAhACIEQIQAiBAAEQIghesIpuZFT1u/MHX9qvfzT9u/YGq/g6l9GabOazAiAIQAEAIgQgBECIAIARAhAHLRfgS7895V+xdM3X+37v0dur/XLesgpp63XUYEgBAAQgBECIAIARAhACIEQJKv53lKLnTaPvmnzduvdM8zf9q8evf+Bbfs+7DLiAAQAkAIgAgBECEAIgRAhABI4X4EK93z+VXz0lPvh0/d52l/l13d6w5Om+fvfj6NCAAhAIQAiBAAEQIgQgBECIAU7kewMnW+fbfueeyp/RROmw/v/n2qvu9p+zLsMiIAhAAQAiBCAEQIgAgBECEAUrgfwWnzw6c5bT589/pT89u3rGvo/txuRgSAEABCAEQIgAgBECEAIgRAXrAfwcpp+xTcsp//1Dzz1DqO7nUWU/s7nHbuhhEBIASAEAARAiBCAEQIgAgBkML9CKp0rwtYXX9q/rZ7H4HTrt/9ubevd5hiRAAIASAEQIQAiBAAEQIgQgCkcD+C0/Zp73bL953aZ+GW8xq6r1+l+7kyIgCEABACIEIARAiACAEQIQBSuB/BLfPGu25ZF7B7n1N/r+7rnGZqn4tdRgSAEABCAEQIgAgBECEAIgRACvcjqNJ9bnzV/O0t+/+f5rRzEKacdv9GBIAQAEIARAiACAEQIQAiBEAK9yM47T357ve9d+/ztPUO1jX80n3uw9R1dhkRAEIACAEQIQAiBECEAIgQACncj6BqnnzltPn2085rmJp/nlofsXs/K+/6d9llRAAIASAEQIQAiBAAEQIgQgCkcD+Clar3vU9bp7B7nSnvuq/B1D4Xu255fowIACEAhACIEAARAiBCAEQIgBTuR1DltPfbq3zaOojT5s+711OsVD233c+5EQEgBIAQABECIEIARAiACAGQF5xrsDI1b7wy9X7+1Hyy/f9/Oe13qPrcXUYEgBAAQgBECIAIARAhACIEQF6wjqD7/fZ3nd/eNfX7rEydI1Dl054rIwJACAAhACIEQIQAiBAAEQIgg+caTM0n3/6e/+7nTp1T0O3TzrnoZkQACAEgBECEAIgQABECIEIAJPk+fQN/aup9+6rzCKquX/W5Vdfvvp9dU+dQ3MKIABACQAiACAEQIQAiBECEAMgLzjVYOW1euvt9+6l9Dap+z9N+t9Puc6X7fqrWLxgRAEIACAEQIQAiBECEAIgQABk81+A03e/Jv+t6h11T+wJMnftwyz4FRgSAEABCAEQIgAgBECEAIgRACs81mHrfe9fUPHn3dbrXNXT/favOcahy+7qAXUYEgBAAQgBECIAIARAhACIEQArXEaxMzbueNg/fvT9/1Tz81H77Vesaqp637n0KdnX/PzIiAIQAEAIgQgBECIAIARAhAPKCdQQrp82v3nI/U/P/p72ff9rfvVv3729EAAgBIARAhACIEAARAiBCAGRwHcFpqubnp+bbT1tfcJpbfp+p39mIABACQAiACAEQIQAiBECEAIh1BOVOO7+gW9X5BVPz51P7L+xex7kGQDshAIQAEAIgQgBECIAIAZDBdQRT897dpt7P737vver63fPnVesUTlsfYR0B0E4IACEAhACIEAARAiBCAOQF6whu2fd+6j3/7s+9ZV/90/ZZWJnaT6H79zEiAIQAEAIgQgBECIAIARAhAJJ8Pc8zfQ/AMCMCQAgAIQAiBECEAIgQABECIEIARAiACAEQIQAiBECEAIgQABECIEIARAiACAEQIQAiBECEAIgQABECIMl/tiG47801F88AAAAASUVORK5CYII=" alt="QR Code - رسالة الوزير ٢" width="200" height="200">
+            </div>
+            <div class="doc-url">https://deepclear92.github.io/quiz-islam/documents/risala-wazir-2.pdf</div>
+            <div class="doc-actions">
+                <a class="btn-download" href="https://deepclear92.github.io/quiz-islam/documents/risala-wazir-2.pdf" download>&#11015; Télécharger</a>
+                <a class="btn-view" href="https://deepclear92.github.io/quiz-islam/documents/risala-wazir-2.pdf" target="_blank">&#128065; Ouvrir</a>
+            </div>
+        </div>
+        <div class="doc-card">
+            <div class="doc-icon">📋</div>
+            <div class="doc-title">رسالة</div>
+            <div class="doc-subtitle">Risala</div>
+            <span class="pages-badge">4 pages &bull; Arabe</span>
+            <div class="qr-container">
+                <img src="data:image/png;base64,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" alt="QR Code - رسالة" width="200" height="200">
+            </div>
+            <div class="doc-url">https://deepclear92.github.io/quiz-islam/documents/risala.pdf</div>
+            <div class="doc-actions">
+                <a class="btn-download" href="https://deepclear92.github.io/quiz-islam/documents/risala.pdf" download>&#11015; Télécharger</a>
+                <a class="btn-view" href="https://deepclear92.github.io/quiz-islam/documents/risala.pdf" target="_blank">&#128065; Ouvrir</a>
+            </div>
+        </div>
+        <div class="doc-card">
+            <div class="doc-icon">🔍</div>
+            <div class="doc-title">Document scanné</div>
+            <div class="doc-subtitle">Document numérisé</div>
+            <span class="pages-badge">2 pages &bull; Arabe</span>
+            <div class="qr-container">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAVgAAAFYCAIAAACZDnMXAAAHPElEQVR4nO3d0a3cNhCG0f8G7iI1paI8u6LUlDqUChiDwMzO6Pqc54VWV15/IECK/HqeJ8Dv7Y/pGwDmCQEgBIAQABECIEIARAiACAEQIQAiBECEAIgQABECIEIARAiACAEQIQAiBECEAIgQABECIEIARAiAJD+qLvTn339VXarVvz//ufr87d91uv7pOrefr3L7HE6q/q6qf5e3PP8qVf+ORgSAEABCAEQIgAgBECEAIgRACtcRnFTNc96amgeu+t7uef7uefXuef7udQon3/X3bEQACAEgBECEAIgQABECIEIA5APrCE7eMt9++71V8+1Vqu6z+739bfsR3Nr2e75lRAAIASAEQIQAiBAAEQIgQgBkcB3BW2zbn/9W1fz21LkAb5+ffwsjAkAIACEAIgRAhACIEAARAiDWEfzStvnzbfP2284vOOler/F2RgSAEABCAEQIgAgBECEAIgRABtcRfNf526l99bftmzB17kD3OREnb/89GxEAQgAIARAhACIEQIQAiBAA+cA6gql53SpT6wLeMm+/zbb9Gt7CiAAQAkAIgAgBECEAIgRAhABI8vU8z/Q9rHA7P9w93/6W9+qn9ju4vc7J29dNVDEiAIQAEAIgQgBECIAIARAhAFK4H0HV+/DdTvdze5/b7n/bfP7t9W8/f3s/zkf4f0YEgBAAQgBECIAIARAhACIEQArXEWx7r/st99M9r171fn73vHrVv1fVOou3nGdRxYgAEAJACIAIARAhACIEQIQAyAfONeiex37L+/lT8/nb9iO4/d6TbftcnLzlXAYjAkAIACEAIgRAhACIEAARAiCF+xHc6p4H7r7+1Hzv1PWn/t6p57btXIPu+zEiAIQAEAIgQgBECIAIARAhADK4juBk23v+2/ZHuFX1vVPnRHTff/fvZ9v+CCdGBIAQAEIARAiACAEQIQAiBEAKzzWomlc/2TaPfbLtPqf2fTiZ+p1sO+di6vonRgSAEABCAEQIgAgBECEAIgRAPrAfQdW88Xd9/39q/v+k6nunnsPU8+xeb9L9ezYiAIQAEAIgQgBECIAIARAhAFK4juAt76VX3U+3bc/n1rZzE96yX0P3dU6MCAAhAIQAiBAAEQIgQgBECIB8YD+CW9veD9+2D//tdU669/k/+a7X37Zfwy0jAkAIACEAIgRAhACIEAARAiDJ1/M8JRd6y7z07fdOXX/q/IJu29ZlbHsOJ/YjANoJASAEgBAAEQIgQgBECIAUriM4mVpfcGvbfPJb9vmf+vxJ9+/k1lvW0RgRAEIACAEQIQAiBECEAIgQABlcR1Dlu87/b9v3/uR3Wy/wXX9vRgSAEABCAEQIgAgBECEAIgRAkh9VF9q2//y2feO7TT3P7nMZptZrTF3n9Hc51wBoJwSAEABCAEQIgAgBECEAUriOYNv75FXz21Pz8FO6n8/UepPu579tn4hbRgSAEABCAEQIgAgBECEAIgRACtcRnEztP9/9fvjt93ava6jSvb/AW55n93M4mdpHw4gAEAJACIAIARAhACIEQIQASPL1PE/rF2x7n39qXcPJtvufOj9ian+Bqf0Uqu6nihEBIASAEAARAiBCAEQIgAgBkA+sIzjpnn+uus627z2Zmn/e9j7/ydT9TK1HuGVEAAgBIARAhACIEAARAiBCAKRwHcG2+eFbb9/vYOo9/G3nIJy8fb1GNyMCQAgAIQAiBECEAIgQABECIB9YR/Bdzy+Y2qdgytR+ClX3U2Vqf4eTqvsxIgCEABACIEIARAiACAEQIQCycB3BW3T/vVPzyW/ZT+Hk7fd/0v17MyIAhAAQAiBCAEQIgAgBECEAkvyY+uLufe+79+Hvfj+/Svf9VD3PqXUTVbbtH3HLiAAQAkAIgAgBECEAIgRAhABI4X4Eb7dtf/5b3esmTqbOrbi9/snbv7eKEQEgBIAQABECIEIARAiACAGQwv0I3vI+9mn+dtt6gW3781ftL9C97mDb/W9bx3FiRAAIASAEQIQAiBAAEQIgQgDkA+cabNvPv+rzt/PD285NmJrf7l4X0H1ew62pfS5uGREAQgAIARAhACIEQIQAiBAA+cA6gpNt72P/bqqef/f6iFvd60dudf+9VYwIACEAhACIEAARAiBCAEQIgAyuI3i7besgus9ZqHL7fv7U50+27eNQxYgAEAJACIAIARAhACIEQIQAiHUEvzS1/3z3vv23uufzq+6nytQ5EVP7FBgRAEIACAEQIQAiBECEAIgQABlcR7DtPIKp98Cr5tu75/mnziPoXncwtQ/CLfsRAO2EABACQAiACAEQIQAiBEA+sI5g2znwJ93z+be65/mr5re714NUnTsw9XxOtv2/MCIAhAAQAiBCAEQIgAgBECEAknw9zzN9D8AwIwJACAAhACIEQIQAiBAAEQIgQgBECIAIARAhACIEQIQAiBAAEQIgQgBECIAIARAhACIEQIQAiBAAEQIgyX/ThdXwItCJzgAAAABJRU5ErkJggg==" alt="QR Code - Document scanné" width="200" height="200">
+            </div>
+            <div class="doc-url">https://deepclear92.github.io/quiz-islam/documents/document-scan.pdf</div>
+            <div class="doc-actions">
+                <a class="btn-download" href="https://deepclear92.github.io/quiz-islam/documents/document-scan.pdf" download>&#11015; Télécharger</a>
+                <a class="btn-view" href="https://deepclear92.github.io/quiz-islam/documents/document-scan.pdf" target="_blank">&#128065; Ouvrir</a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="footer">
     Tariqa Qadiriyya Boutchichiyya &mdash; Quiz Islam
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script>
-const BASE_URL = "https://deepclear92.github.io/quiz-islam/documents/";
-
-const documents = [
-    {
-        id: "testament",
-        file: "testament-sidi-hamza.pdf",
-        title: "Testament de Sidi Hamza",
-        subtitle: "Sidi Hamza Kadiri Boutchich — 3 octobre 1990",
-        icon: "📜",
-        pages: "3 pages",
-        lang: "Français"
-    },
-    {
-        id: "lettre-munir",
-        file: "lettre-sidi-munir.pdf",
-        title: "Lettre à Sidi Munir",
-        subtitle: "رسالة إلى سيدي منير — M. Toufiq",
-        icon: "✉️",
-        pages: "11 pages",
-        lang: "Arabe"
-    },
-    {
-        id: "risala-wazir",
-        file: "risala-wazir-2.pdf",
-        title: "رسالة الوزير ٢",
-        subtitle: "Risala Al-Wazir 2",
-        icon: "📄",
-        pages: "2 pages",
-        lang: "Arabe"
-    },
-    {
-        id: "risala",
-        file: "risala.pdf",
-        title: "رسالة",
-        subtitle: "Risala",
-        icon: "📋",
-        pages: "4 pages",
-        lang: "Arabe"
-    },
-    {
-        id: "document-scan",
-        file: "document-scan.pdf",
-        title: "Document scanné",
-        subtitle: "Document numérisé",
-        icon: "🔍",
-        pages: "2 pages",
-        lang: "Arabe"
-    }
-];
-
-function printQR(id) {
-    const card = document.getElementById("card-" + id);
-    const w = window.open("", "_blank");
-    const qrEl = card.querySelector(".qr-container");
-    const title = card.querySelector(".doc-title").textContent;
-    const canvas = qrEl.querySelector("canvas");
-    const dataUrl = canvas ? canvas.toDataURL() : "";
-    w.document.write(`<!DOCTYPE html><html><head><title>${title}</title>
-    <style>body{font-family:sans-serif;text-align:center;padding:40px;}
-    h2{margin-bottom:20px;color:#1a7a4c;}img{border:2px solid #ddd;border-radius:8px;padding:8px;}</style>
-    </head><body><h2>${title}</h2><img src="${dataUrl}" width="220"><br><br>
-    <p style="font-size:0.85rem;color:#888;">Scannez pour télécharger</p>
-    <script>window.onload=()=>window.print()<\/script></body></html>`);
-    w.document.close();
-}
-
-const grid = document.getElementById("docs-grid");
-
-documents.forEach(doc => {
-    const url = BASE_URL + doc.file;
-
-    const card = document.createElement("div");
-    card.className = "doc-card";
-    card.id = "card-" + doc.id;
-    card.innerHTML = `
-        <div class="doc-icon">${doc.icon}</div>
-        <div class="doc-title">${doc.title}</div>
-        <div class="doc-subtitle">${doc.subtitle}</div>
-        <span class="pages-badge">${doc.pages} &bull; ${doc.lang}</span>
-        <div class="qr-container" id="qr-${doc.id}"></div>
-        <div class="doc-actions">
-            <a class="btn-download" href="${url}" download>&#11015; Télécharger</a>
-            <button class="btn-print" onclick="printQR('${doc.id}')">🖨️ Imprimer QR</button>
-        </div>
-    `;
-    grid.appendChild(card);
-
-    new QRCode(document.getElementById("qr-" + doc.id), {
-        text: url,
-        width: 200,
-        height: 200,
-        colorDark: "#1a7a4c",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.M
-    });
-});
-</script>
 </body>
 </html>
