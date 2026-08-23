@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programme RMS 21</title>
+    <meta name="theme-color" content="#1a7a4c">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f0e8;
+            color: #2c2c2c;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a7a4c 0%, #0d5c38 100%);
+            color: white;
+            padding: 22px 20px 18px;
+            text-align: center;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .back-btn {
+            position: absolute;
+            top: 16px; left: 14px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 7px 12px;
+            font-size: 0.88rem;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .header .logo { font-size: 2rem; margin-bottom: 4px; }
+        .header h1 { font-size: 1.2rem; font-weight: 700; }
+        .header p { font-size: 0.82rem; opacity: 0.85; margin-top: 3px; }
+
+        .main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 36px 32px 28px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 380px;
+            width: 100%;
+            border: 1px solid #e8e0d0;
+        }
+
+        .card-icon { font-size: 2.4rem; margin-bottom: 10px; }
+        .card-title { font-size: 1.15rem; font-weight: 700; color: #1a7a4c; margin-bottom: 4px; }
+        .card-subtitle { font-size: 0.82rem; color: #999; margin-bottom: 22px; }
+
+        .qr-wrap {
+            display: inline-block;
+            border: 3px solid #1a7a4c;
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 20px;
+            background: white;
+        }
+        .qr-wrap img { display: block; border-radius: 8px; }
+
+        .scan-hint {
+            font-size: 0.83rem;
+            color: #777;
+            margin-bottom: 22px;
+            line-height: 1.5;
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #1a7a4c;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            padding: 13px 28px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            transition: background 0.2s;
+            width: 100%;
+            justify-content: center;
+        }
+        .btn-download:hover { background: #0d5c38; }
+        .btn-secondary {
+            margin-top: 10px;
+            background: transparent;
+            color: #1a7a4c;
+            border: 1.5px solid #cfe3d7;
+        }
+        .btn-secondary:hover { background: #eef6f1; }
+
+        .file-info {
+            margin-top: 12px;
+            font-size: 0.73rem;
+            color: #bbb;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <a href="documents.html" class="back-btn">&#8592; Retour</a>
+    <div class="logo">&#128197;</div>
+    <h1>Programme RMS 21</h1>
+    <p>Programme officiel</p>
+</div>
+
+<div class="main">
+    <div class="card">
+        <div class="card-icon">&#128220;</div>
+        <div class="card-title">Programme RMS 21</div>
+        <div class="card-subtitle">Document PDF</div>
+
+        <div class="qr-wrap">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAiYAAAImAQMAAABdANMFAAAABlBMVEUaekz///9lNKHLAAAEF0lEQVR42u2dXY6cQAyErXAAjsTVOVIfAKmz0G27mtmHRInUreTjAc3MQj2gWqtc/sHqXzguAwUUUEABBRRQ/gOUy/qxf309n5N8rdWOdsnW7ni+9ku+jvu3H/Y3DlBA+a1D/g1O526jbZL6CK7fVH5o2z45+Xm6oEzjbqfjHVTLVj3u3uQsyVPnbv9NOM7TBWU2d299UKwR+OFu/5Ry4aZtfegNd0FZjLv2BN8nxtpD2658+8XFJQTcBWU1vduo7LK2CQcRwiF10bugLMHdD5/hF074DKDM5+5gmZ3ujHVSZ9x9HIfy7W08XVCmcTd9BgsXrJbUu5HEibW7+XVwF5SZudqucVfMhqP21K3nZZ6rPdx14xfugjJRM6QpNpTtPAxvfhLHoUdluAvK1FxNYmyYt0cdTi3QltHpxWcAZbpmcPXa464T2NO0rRu/tqveJe6CMj/umtDWiXl4ePXq8DZU3VqtDb0LymzN0NIv01yt8/lKaSDxuath4i4oK3C3R9bqdoKZRuDegRNKoQmMAndBmZ6raVuj9+K41O0ZWobm+jIleLqgzOGu9y4oY83E2g0h7HE3+8jgLihzuZulX4mxR0l90IOvRmCvtcFdUKbG3TEbkxpacFfrFVoOhrugzNa7mwxF5JCP9+pGjG2WWToOG5oBlAU0Q335u8OMRPtUB82AvwvKArmaNJZf3qywX3rhMdTa+r3oXVBW8BmyYdf/tlWdoLBM4kLqFjQDKHP1rrQ/2svQlbn3UBSv4At3QZmaqw0dZeEkZA+kvXaLDG2/PF1QpuVqOctz7kOzeRA4xYSMqp3EXVBWiLvD+pusUmTFWEmdHb9wF5TJcXfT1Qyv7SEhhLv7W+gjA2UZ7j5HTFP2QGtZDn516qRmwGcAZbLPcIqiHaaDTUbVVO/m3DvcBWWFuLtJXS2rvq5ta9UZtqi6wV1QpuZq2bYQvefRR/beyhAmL3oXlAU0g0WFN0u/lu7CJXvL0gKm9xyUVeKueTyVrM2byfz6TXQx/QygrKB3oxIsK3F0tCctYFkqjd4FZTZ3fctNtuTmULtukdZFJJHTwV1QZmqG9qmkp5AG2Fi5yICM3gVlCc0gijbHffaPrQyfPb3oXVAW0Lsfm29yxj3eZXUMe3eJu6AsoBk+1vDb4C7YuzVn/I2nC8q8XK3monMXCTVWkcmmvbLpUDHzaqAskasN4z7dRMgm3vByvcy2X+hdUOZzN1/8l1rAl5YO7/k5dGM0/i4oC3D3iawxlmZpgJ0RgY9hvqLde/J+NVCW4e7wnp8Yo0ip+02TDtwFZZ24KytEjvoaEc5lDvQzgLKU3pWG3a58dQw+35TNPjJQVvMZPAczXYRTy9ijLqukibugzOTuHx8XKKCAAgoooIDyr6P8BM6fI1cesZ/oAAAAAElFTkSuQmCC" alt="QR Code du Programme RMS 21" width="240" height="240">
+        </div>
+
+        <p class="scan-hint">
+            &#128247; Scannez avec votre t&eacute;l&eacute;phone<br>pour ouvrir le programme
+        </p>
+
+        <a class="btn-download" href="documents/programme-rms-21.pdf">
+            &#128214; Ouvrir le programme
+        </a>
+        <a class="btn-download btn-secondary" href="documents/programme-rms-21.pdf" download>
+            &#11015; T&eacute;l&eacute;charger (PDF &bull; 728 Ko)
+        </a>
+
+        <div class="file-info">
+            Programme RMS 21
+        </div>
+    </div>
+</div>
+</body>
+</html>
